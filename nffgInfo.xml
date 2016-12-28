@@ -1,0 +1,96 @@
+<?xml version="1.0"?>
+<nffgs xmlns:xsd="http://www.w3.org/2001/XMLSchema-instance"
+	xsd:noNamespaceSchemaLocation="nffgInfo.xsd">
+
+
+	<nffg>
+		<name>nffg1</name>
+		<lastUpdate>2015-07-21T21:00:00.000+02:00</lastUpdate>
+	<nodes>
+		<node>
+			<name>nodos1</name>
+			<functionality>FW</functionality>
+		</node>
+
+		<node>
+			<name>nododst1</name>
+			<functionality>NAT</functionality>
+		</node>
+
+		<node>
+			<name>nodoprova1</name>
+			<functionality>DPI</functionality>
+		</node>
+
+		<node>
+			<name>nodopluto1</name>
+			<functionality>DPI</functionality>
+		</node>
+
+		<node>
+			<name>nodopluto11</name>
+			<functionality>DPI</functionality>
+		</node>
+	</nodes>
+	<links>
+		<link>
+			<name>link1</name>
+			<src>nodos1</src>
+			<dst>nodopluto1</dst>
+		</link>
+
+		<link>
+			<name>link2</name>
+			<src>nodos1</src>
+			<dst>nododst1</dst>
+		</link>
+	</links>
+	
+	</nffg>
+
+	<nffg>
+		<name>pluto2</name>
+		<lastUpdate>2015-07-21T21:00:00.000+02:00</lastUpdate>
+	<nodes>
+	
+		<node>
+			<name>nodos2</name>
+			<functionality>FW</functionality>
+		</node>
+
+		<node>
+			<name>nododst2</name>
+			<functionality>NAT</functionality>
+		</node>
+
+		<node>
+			<name>nodoprova2</name>
+			<functionality>DPI</functionality>
+		</node>
+
+		<node>
+			<name>nodopluto2</name>
+			<functionality>DPI</functionality>
+		</node>
+
+		<node>
+			<name>nodopluto22</name>
+			<functionality>DPI</functionality>
+		</node>
+	</nodes>
+	<links>
+		<link>
+			<name>link2</name>
+			<src>nodos2</src>
+			<dst>nodopluto2</dst>
+		</link>
+
+		<link>
+			<name>link22</name>
+			<src>nodos2</src>
+			<dst>nododst2</dst>
+		</link>
+	</links>
+
+	</nffg>
+</nffgs>

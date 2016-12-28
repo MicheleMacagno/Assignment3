@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project basedir="." default="build-service" name="NFFG-3_BUILD">
+	<import file="build.xml" />
+	
+	<description>
+			Script for NFFG Assignment 2 - For automatic classes generation
+	</description>
+	
+	<property name="basedir" location="." />
+	<property name="lib.dir" location="${basedir}/lib" />
+	<property name="gen.dir" location="${basedir}/gen-src" />
+	
+	<property name="PORT" value="8080"/>
+	<property name="URLNEO" value="http://localhost:${PORT}/Neo4JXML/rest"/>
+	<property name="WADL" value="${URLNEO}/application.wadl"/>
+	
+	<path id="sol.classpath">
+			<pathelement location="${lib.dir}/NFFG.jar"/>
+			<pathelement location="${lib.dir}/lab2.jar"/>
+			<pathelement location="${lib.dir}/javax.ws.rs-api-2.0.1.jar"/>
+			<pathelement location="${lib.dir}/jersey-client-1.19.1.jar"/>
+	<pathelement location="${lib.dir}/javax.ws.rs-api-2.0.1.jar"/>	
+			<pathelement location="${basedir}/lib-src/jersey-core-1.19.1.jar"/>
+	</path>
+	
+	<!-- define wjc task (WADL to Java) -->
+	<taskdef name="wjc" classname="org.jvnet.ws.wadl2java.WJCTask">
+	   <classpath>
+	   	<fileset dir="${lib.dir}" includes="*.jar" />
+	   </classpath>
+	</taskdef>
+	
+	<target name="build-service">
+		<mkdir dir="${gen.dir}"/>
+		<mkdir dir="${build.dir}" />
+		<echo message="I'm generating the artifacts" />
+		
+		<wjc description="${WADL}" package="it.polito.dp2.NFFG.sol3.service"
+	       autoSchemaPackage="false" target="${gen.dir}">
+	     <customizations dir="${basedir}" includes="binding.xjc"/>
+	     <produces dir="${gen.dir}/it/polito/dp2/NFFG/sol3/service" includes="*.java"/>
+	     <depends dir="${basedir}" includes="build.xml"/>
+	    </wjc>
+		
+		<javac destdir="${build.dir}" debug="${debug}" debuglevel="${debuglevel}" source="${source}" target="${target}" includeantruntime="false">
+					<src path="${src.dir}"/>
+					<src path="${gen.dir}"/>
+					<include name="it/polito/dp2/NFFG/sol3/**" />
+					<classpath>
+						<path refid="test.classpath" />
+					</classpath>
+		</javac>
+		
+		<echo>Compiling my classes (if needed)...</echo>
+				
+		
+				<echo>Done.</echo>
+		
+	</target>
+	
+</project>

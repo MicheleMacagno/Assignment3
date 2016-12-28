@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<policies xmlns:xsd="http://www.w3.org/2001/XMLSchema-instance"
+	xsd:noNamespaceSchemaLocation="nffgInfo.xsd">
+		<policy nffg="nffg1">
+			<name>policy1</name>
+			<positivity>true</positivity>
+			<src>nodopluto1</src>
+			<dst>nodos1</dst>
+			<verification>
+				<verificationTime>2016-07-21T21:00:00.000+02:00</verificationTime>
+				<result>true</result>
+				<message>This policy is Verified</message>
+			</verification>
+		</policy>
+		
+		<policy>
+			<name>PolicyTraversal1</name>
+			<positivity>true</positivity>
+			<src>nodos1</src>
+			<dst>nodoprova1</dst>
+			<traversal>
+				<functionality>DPI</functionality>
+			</traversal>
+		</policy>
+	</policies>
