@@ -270,6 +270,33 @@ public class NffgPolicyService {
 		}
 	}
 	
+	public static synchronized XPolicy updatePolicyByName(String name,XPolicy xpolicy) throws NotFoundException,ForbiddenException{
+		xpolicy.setName(name);
+		if(!mapXNffg.containsKey(xpolicy.getNffg())){
+			throw new ForbiddenException("Error - Nffg name not existing",Response.status(403).entity("Error - Nffg name not existing").build());
+		}
+		if(mapXPolicy.containsKey(name)){
+			mapXPolicy.put(name,xpolicy);
+			return xpolicy;
+		}else{
+			throw new NotFoundException("The policy is not existing, impossible to update it",Response.status(404).entity("The policy is not existing, impossible to update it").build());
+		}
+	}
+	
+	public static synchronized XPolicies verifyPolicies(XVerificationRequest xvr){
+		XPolicies xpolicies = new XPolicies();
+		xvr.getPolicyname().forEach(p->{
+			if(!mapXPolicy.containsKey(p)){
+				throw new NotFoundException("Error - At least one policy for which you are requiring the verification is not existing.",
+						Response.status(404).entity("Error - At least one policy for which you are requiring the verification is not existing.").build());
+			}
+			//TODO: check about TRAVERSAL POLICY/ only reachability must be verified
+		});
+		
+		//TODO: verify using neo4j
+		return null;
+	}
+	
 	
 	private static XMLGregorianCalendar convertCalendar (Calendar cal){
 		Date calendarDate = cal.getTime();

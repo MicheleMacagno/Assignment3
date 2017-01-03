@@ -13,6 +13,7 @@ import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.GET;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -32,6 +33,7 @@ import it.polito.dp2.NFFG.sol3.bindings.XNffg;
 import it.polito.dp2.NFFG.sol3.bindings.XNffgs;
 import it.polito.dp2.NFFG.sol3.bindings.XPolicies;
 import it.polito.dp2.NFFG.sol3.bindings.XPolicy;
+import it.polito.dp2.NFFG.sol3.bindings.XVerificationRequest;
 
 
 @Path("/")
@@ -200,6 +202,25 @@ public class NffgPolicyWS {
 		XPolicy rxpolicy = NffgPolicyService.deletePolicyByName(name);
 		return Response.status(200).entity(of.createPolicy(rxpolicy)).build();
 	}
+	
+	@PUT
+	@Path("policy/{name: [a-zA-Z_][a-zA-Z0-9_]*}")
+	@Consumes(MediaType.APPLICATION_XML)
+	@Produces(MediaType.APPLICATION_XML)
+	public Response updatePolicyByName(@PathParam("name") String name,XPolicy xpolicy) throws NotFoundException,ForbiddenException{
+		XPolicy rxpolicy = NffgPolicyService.updatePolicyByName(name, xpolicy);
+		return Response.status(200).entity(of.createPolicy(rxpolicy)).build();
+	}
+	
+	@POST
+	@Path("policies/verification")
+	@Consumes(MediaType.APPLICATION_XML)
+	@Produces(MediaType.APPLICATION_XML)
+	public Response verifyPolicyByName(XVerificationRequest xverificationrequest) throws NotFoundException{
+		XPolicies verified = NffgPolicyService.verifyPolicies(xverificationrequest);
+		return Response.status(200).entity(verified).build();
+	}
+	
 	
 	
 	

@@ -13,21 +13,20 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlType;
 
 
 /**
- * <p>Java class for XTraversal complex type.
+ * <p>Java class for XVerificationRequest complex type.
  * 
  * <p>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
- * &lt;complexType name="XTraversal">
+ * &lt;complexType name="XVerificationRequest">
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       &lt;sequence>
- *         &lt;element name="functionality" type="{}XFunctionality" maxOccurs="unbounded"/>
+ *         &lt;element name="policyname" type="{}XNameType" maxOccurs="unbounded"/>
  *       &lt;/sequence>
  *     &lt;/restriction>
  *   &lt;/complexContent>
@@ -37,42 +36,41 @@ import javax.xml.bind.annotation.XmlType;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "XTraversal", propOrder = {
-    "functionality"
+@XmlType(name = "XVerificationRequest", propOrder = {
+    "policyname"
 })
-public class XTraversal {
+public class XVerificationRequest {
 
     @XmlElement(required = true)
-    @XmlSchemaType(name = "string")
-    protected List<XFunctionality> functionality;
+    protected List<String> policyname;
 
     /**
-     * Gets the value of the functionality property.
+     * Gets the value of the policyname property.
      * 
      * <p>
      * This accessor method returns a reference to the live list,
      * not a snapshot. Therefore any modification you make to the
      * returned list will be present inside the JAXB object.
-     * This is why there is not a <CODE>set</CODE> method for the functionality property.
+     * This is why there is not a <CODE>set</CODE> method for the policyname property.
      * 
      * <p>
      * For example, to add a new item, do as follows:
      * <pre>
-     *    getFunctionality().add(newItem);
+     *    getPolicyname().add(newItem);
      * </pre>
      * 
      * 
      * <p>
      * Objects of the following type(s) are allowed in the list
-     * {@link XFunctionality }
+     * {@link String }
      * 
      * 
      */
-    public List<XFunctionality> getFunctionality() {
-        if (functionality == null) {
-            functionality = new ArrayList<XFunctionality>();
+    public List<String> getPolicyname() {
+        if (policyname == null) {
+            policyname = new ArrayList<String>();
         }
-        return this.functionality;
+        return this.policyname;
     }
 
 }
