@@ -7,6 +7,8 @@ import javax.inject.Singleton;
 import javax.jws.WebService;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.GET;
 import javax.ws.rs.NotFoundException;
@@ -14,6 +16,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -27,6 +30,7 @@ import com.wordnik.swagger.annotations.ApiOperation;
 import it.polito.dp2.NFFG.lab3.AlreadyLoadedException;
 import it.polito.dp2.NFFG.sol3.bindings.XNffg;
 import it.polito.dp2.NFFG.sol3.bindings.XNffgs;
+import it.polito.dp2.NFFG.sol3.bindings.XPolicies;
 import it.polito.dp2.NFFG.sol3.bindings.XPolicy;
 
 
@@ -41,37 +45,6 @@ public class NffgPolicyWS {
 	public NffgPolicyWS(){
 		
 	}
-	
-	
-	
-//	@GET
-//	@Path("nffg/{name: [a-zA-Z_][a-zA-Z0-9_]*}")
-//	@Produces(MediaType.APPLICATION_XML)
-//	public Response getNffgByName(@PathParam("name") String name){
-//		//returns a 404 if the name do not math the regexp
-//		XNffg xnffg = NffgPolicyService.getXNffgByName(name);
-//		if(xnffg==null){
-//			return Response.status(404).entity(new String("The nffg named as " + name + " is not existing!!")).build() ;
-//			//throw new WebServiceException("Error 404 - The nffg named as " + name + " is not existing!!"); 
-//		}
-//		return Response.status(200).entity(xnffg.getName()).build() ;
-//	}
-	
-//	@GET
-//	@Path("nffg/{name: [a-zA-Z_][a-zA-Z0-9_]*}")
-//	@Produces(MediaType.APPLICATION_XML)
-//	public JAXBElement<XNffg> getNffgByName(@PathParam("name") String name){
-//		//returns a 404 if the name do not math the regexp
-//		XNffg xnffg = NffgPolicyService.getXNffgByName(name);
-//		if(xnffg==null){
-//			//return Response.status(404).entity(new String("The nffg named as " + name + " is not existing!!")).build() ;
-//			return null;
-//		}
-//		it.polito.dp2.NFFG.sol3.bindings.ObjectFactory of = new it.polito.dp2.NFFG.sol3.bindings.ObjectFactory();
-//		of.createNffg(xnffg);
-//		return of.createNffg(xnffg);
-//	}
-//	
 	
 //my working version with xml translation
 	
@@ -134,7 +107,36 @@ public class NffgPolicyWS {
 		}
   	}
 	
+	@GET
+	@Path("/nffgs")
+	@Produces(MediaType.APPLICATION_XML)
+	public Response getNffgs()/* throws NotFoundException*/{
+		
+		XNffgs rxnffgs = NffgPolicyService.getXNffgs();
+		return Response.status(200).entity(of.createNffgs(rxnffgs)).build();
+	}
 	
+	@DELETE
+	@Path("/nffgs")
+	public Response deleteAllNffgs(){
+		NffgPolicyService.deleteAllXNffgs();
+		return Response.status(204).build();
+	}
+	
+	@DELETE
+	@Path("/nffg/{name: [a-zA-Z_][a-zA-Z0-9_]*}")
+	@Produces(MediaType.APPLICATION_XML)
+	public Response deleteNffgByName(
+			@DefaultValue("y") @QueryParam("delpolicy") String delpolicy
+			,@PathParam("name") String name) throws NotFoundException{
+		
+		if(!(delpolicy.equals("y") || delpolicy.equals("n"))){
+			throw new ForbiddenException("You must specify either y/n for delpolicy parameter",
+					Response.status(403).entity("You must specify either y/n for delpolicy parameter").build());
+		}
+		XNffg rxnffg = NffgPolicyService.deleteNffgByName(name,delpolicy);
+		return Response.status(200).entity(of.createNffg(rxnffg)).build();
+	}
 	
 	
 	@POST
@@ -149,30 +151,56 @@ public class NffgPolicyWS {
 		return Response.created(uri).entity(of.createPolicy(rxpolicy)).build();
 	}
 		
-//	
-//	@POST
-//	@Path("policy")
-//	@ApiOperation(	value = "Create a new Policy", notes = "xml format required")
-//	@Produces(MediaType.APPLICATION_XML)
-//	@Consumes(MediaType.APPLICATION_XML)
-//	public Response storePolicyByName(@PathParam("name") String name, String xmlDocument){
-//		NffgPolicyService nps = new NffgPolicyService();
-////		Response policyResponse = nps.unmarshalPolicy(xmlDocument);
-//		return policyResponse;
-//	}
-//	
-//	@POST
-//	@Path("policies")
-//	@ApiOperation(	value = "Create a new set of policies", notes = "xml format required")
-//	@Produces(MediaType.APPLICATION_XML)
-//	@Consumes(MediaType.APPLICATION_XML)
-//	public Response storePolicies(String xmlDocument){
-//		
-//		NffgPolicyService nps = new NffgPolicyService();
-////		Response policiesResponse = nps.unmarshalPolicies(xmlDocument);
-//		return policiesResponse;
-//	}
-//	
+	@GET
+	@Path("policy/{name: [a-zA-Z_][a-zA-Z0-9_]*}")
+	@ApiOperation(	value = "Read an existing policy", notes = "xml format required")
+	@Produces(MediaType.APPLICATION_XML)
+	public Response getPolicyByName(@PathParam("name") String name) throws NotFoundException{
+		XPolicy rxpolicy = NffgPolicyService.getXPolicyByName(name);
+		return Response.status(200).entity(of.createPolicy(rxpolicy)).build();
+		
+	}
+	
+	@POST
+	@Path("policies")
+	@ApiOperation(	value = "Create new set of policies", notes = "xml format required")
+	@Produces(MediaType.APPLICATION_XML)
+	@Consumes(MediaType.APPLICATION_XML)
+	public Response storePolicies(XPolicies xpolicies) throws ForbiddenException {
+		
+		XPolicies rxpolicies = NffgPolicyService.addXPolicies(xpolicies);
+		if(xpolicies != null){
+			return Response.status(200).entity(of.createPolicies(rxpolicies)).build();
+		}
+		else{
+			return Response.status(404).entity("Impossible to create the object. Verify the name of nffg is not already existing").build();
+		}
+  	}
+	
+	@GET
+	@Path("policies")
+	@Produces(MediaType.APPLICATION_XML)
+	public Response getPolicies()/* throws NotFoundException*/{
+		
+		XPolicies rxpolicies = NffgPolicyService.getXPolicies();
+		return Response.status(200).entity(of.createPolicies(rxpolicies)).build();
+	}
+	
+	@DELETE
+	@Path("policies")
+	public Response deletePolicies(){
+		NffgPolicyService.deleteAllPolicies();
+		return Response.status(204).build();
+	}
+	
+	@DELETE
+	@Path("/policy/{name: [a-zA-Z_][a-zA-Z0-9_]*}")
+	@Produces(MediaType.APPLICATION_XML)
+	public Response deletePolicyByName(@PathParam("name") String name) throws NotFoundException{
+		XPolicy rxpolicy = NffgPolicyService.deletePolicyByName(name);
+		return Response.status(200).entity(of.createPolicy(rxpolicy)).build();
+	}
+	
 	
 	
 }

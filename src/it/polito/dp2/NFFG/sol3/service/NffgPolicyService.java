@@ -8,8 +8,10 @@ import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.BadRequestException;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
@@ -41,6 +43,15 @@ public class NffgPolicyService {
 			throw new NotFoundException("msg Nffg not found in the database",Response.status(404).entity("Nffg not found in the database").build());
 //			return null;
 		}
+	}
+	
+	
+	public static synchronized XNffgs getXNffgs(){
+		XNffgs returnXNffgs= new XNffgs();
+		mapXNffg.values().stream().forEach(n->{
+			returnXNffgs.getNffg().add(n);
+		});
+		return returnXNffgs;
 	}
 	
 //	/**
@@ -95,6 +106,7 @@ public class NffgPolicyService {
 	 * 
 	 * @param name
 	 * @return the XPolicy object in case of success
+	 * Throws a NotFoundException if the policy does not exist.
 	 */
 	public static synchronized XPolicy getXPolicyByName(String name){
 		if(mapXPolicy.containsKey(name)){
@@ -105,39 +117,16 @@ public class NffgPolicyService {
 		}
 	}
 	
+	public static synchronized XPolicies getXPolicies(){
+		XPolicies rxpolicies = new XPolicies();
+		mapXPolicy.values().stream().forEach(p->{
+			rxpolicies.getPolicy().add(p);
+		});
+		return rxpolicies;
+	}
 	
-//	/**
-//	 * Verify the Nffg is existing and then add the policy in the database
-//	 * (in case the policy is not already existing)
-//	 * @param policy
-//	 * @return
-//	 * -1 the Nffg is not existing
-//	 * -2 the Policy is already existing
-//	 * -3 other errors
-//	 */
-//	public static synchronized Integer addXPolicyVerifyXNffg(XPolicy policy){
-//		
-//		try{
-//			//verify the Nffg relative to the policy is existing
-//			if(mapXNffg.containsKey(policy.getNffg())){
-//				System.out.println("Error - Policy already existing");
-//				return -1;
-//			}
-//			else{
-//				if(mapXPolicy.putIfAbsent(policy.getName(), policy) == null){
-//					//able to insert the element in the map
-//					return 0;
-//				}
-//				else{
-//					return -2;
-//				}
-//			}
-//			
-//		}catch(Exception e){
-//			//the put can throw many exceptions
-//			return -3;
-//		}
-//	}
+	
+
 	
 	/**
 	 * Verify the Nffg is existing and then add the policy in the database
@@ -181,175 +170,106 @@ public class NffgPolicyService {
 		List<XNffg> list = returnedXNffgs.getNffg();
 		xnffgs.getNffg().forEach(n->{
 			list.add(addXNffg(n));
-//			returned.getNffg().add(addXNffg(n));
 		});
 		
 		return returnedXNffgs;
-		
 	}
 	
+	public static synchronized void deleteAllXNffgs(){
+		mapXNffg.clear();
+		//when removing an nffg also the relative policies are removed
+		deleteAllPolicies();
+	}
 	
-//	//TODO: decide the error value
-//	public Response unmarshalNffg(String xml){
-//		JAXBContext jc;
-//		Unmarshaller u;
-//		XNffg objectXNffg;
-//		
-//		try {
-//			jc = JAXBContext.newInstance("it.polito.dp2.NFFG.sol3.bindings");
-//			SchemaFactory sf = SchemaFactory.newInstance(javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI);
-//			u = jc.createUnmarshaller();
-//			try{
-////				u.setSchema(sf.newSchema(new File("xsd/nffgInfo.xsd")));
-//			}catch(Exception e){
-//				e.printStackTrace();
-//				return Response.status(404).entity(new String("Error Occurred: -1\n" + e.getMessage() +"\nVerify the Nffg data are correctly written" )).build(); 
-//			}
-//			StringReader sr = new StringReader(xml);
-//			// Unmarshal Shipping Address
-//	        JAXBElement<XNffg> je = (JAXBElement<XNffg>) u.unmarshal(sr);
-//	        objectXNffg = je.getValue();
-//			if(objectXNffg==null){
-//				//TODO: verify if this null is really necessary
-//				return Response.status(404).entity(new String("Error Occurred: -2\n" +"\nVerify the Nffg data are correctly written")).build(); 
-//			}
-//			
-//			//TODO: add verification about existence
-//			if(NffgPolicyService.addXNffg(objectXNffg)!=null){
-//				return Response.status(200).entity("Nffg correctly created!!").build() ;
-//			}
-//			else{
-//				return Response.status(404).entity(new String("Error Occurred: -5\n" +"\nNffg already existing, unable to add it")).build(); 
-//			}
-//		} catch (JAXBException e) {
-//			e.printStackTrace();
-//			return Response.status(404).entity(new String("Error Occurred: -3\n" + e.getStackTrace()+"\nVerify the Nffg data are correctly written")).build(); 
-//		}catch (Exception e){
-//			e.printStackTrace();
-//			return Response.status(404).entity(new String("Error Occurred: -4\n" + e.getStackTrace()+"\nVerify the Nffg data are correctly written")).build(); 
-//		}
-//	}
-//	
-//	public Response unmarshalNffgs(String xml) {
-//		JAXBContext jc;
-//		Unmarshaller u;
-//		XNffgs objectXNffgs;
-//		
-//		try {
-//			jc = JAXBContext.newInstance("it.polito.dp2.NFFG.sol3.bindings");
-//			SchemaFactory sf = SchemaFactory.newInstance(javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI);
-//			u = jc.createUnmarshaller();
-//			try{
-////				u.setSchema(sf.newSchema(new File("xsd/nffgInfo.xsd")));
-//			}catch(Exception e){
-//				e.printStackTrace();
-//				return Response.status(404).entity(new String("Error Occurred: -1\n" + e.getMessage() +"\nVerify the set of Nffgs is correctly written and respect the schema" )).build(); 
-//			}
-//			StringReader sr = new StringReader(xml);
-//			// Unmarshal Shipping Address
-//	        JAXBElement<XNffgs> je = (JAXBElement<XNffgs>) u.unmarshal(sr);
-//	        objectXNffgs = je.getValue();
-//			if(objectXNffgs==null){
-//				//TODO: verify if this null is really necessary
-//				return Response.status(404).entity(new String("Error Occurred: -2\n" +"\nVerify the set of Nffgs is correctly written")).build(); 
-//			}
-//			
-//			//TODO: add verification about existence
-//			//successful creation
-//			return Response.status(200).entity("Nffgs correctly created!!").build() ;
-//		} catch (JAXBException e) {
-//			e.printStackTrace();
-//			return Response.status(404).entity(new String("Error Occurred: -3\n" + e.getStackTrace()+"\nVerify the set of Nffgs is correctly written")).build(); 
-//		}catch (Exception e){
-//			e.printStackTrace();
-//			return Response.status(404).entity(new String("Error Occurred: -4\n" + e.getStackTrace()+"\nVerify the set of Nffgs is correctly written")).build(); 
-//		}
-//	}
-//
-//
-//	public Response unmarshalPolicy(String xml){
-//		
-//		JAXBContext jc;
-//		Unmarshaller u;
-//		XPolicy objectXPolicy;
-//		
-//		try {
-//			jc = JAXBContext.newInstance("it.polito.dp2.NFFG.sol3.bindings");
-//			SchemaFactory sf = SchemaFactory.newInstance(javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI);
-//			u = jc.createUnmarshaller();
-//			try{
-////				u.setSchema(sf.newSchema(new File("/xsd/nffgInfo.xsd")));
-//			}catch(Exception e){
-//				e.printStackTrace();
-//				return Response.status(404).entity(new String("Error Occurred: -1\n" + e.getMessage() +"\nSchema error" )).build(); 
-//			}
-//			StringReader sr = new StringReader(xml);
-//			// Unmarshal Shipping Address
-//	        JAXBElement<XPolicy> je = (JAXBElement<XPolicy>) u.unmarshal(sr);
-//	        objectXPolicy = je.getValue();
-//			if(objectXPolicy==null){
-//				//TODO: verify if this null is really necessary
-//				return Response.status(404).entity(new String("Error Occurred: -2\n" +"\nVerify the set of policies are correctly written")).build(); 
-//			}
-//			
-//			switch(NffgPolicyService.addXPolicyVerifyXNffg(objectXPolicy)){
-//			case 0:
-//				//successful cretion
-//				return Response.status(200).entity("Policies correctly created!!").build() ;
-//			case -1:
-//				return Response.status(404).entity(new String("Error Occurred: -5\n" +"\nThe Nffg relative to the policy does not exist.")).build(); 
-//			case -2:	
-//				return Response.status(404).entity(new String("Error Occurred: -6\n" +"\nPolicy with the same name already existing.")).build(); 
-//			case -3:
-//			default:
-//				return Response.status(404).entity(new String("Error Occurred: -7\n" +"\nUnexpected error occurred while inserting data")).build(); 
-//					
-//			}
-//		} catch (JAXBException e) {
-//			e.printStackTrace();
-//			return Response.status(404).entity(new String("Error Occurred: -3\n" + e.getStackTrace()+"\nVerify the set of policies are correctly written")).build(); 
-//		}catch (Exception e){
-//			e.printStackTrace();
-//			return Response.status(404).entity(new String("Error Occurred: -4\n" + e.getStackTrace()+"\nVerify the set of policies are correctly written")).build(); 
-//		}
-//	}
-//		
-//	//TODO: complete verrification
-//	public Response unmarshalPolicies(String xml) {
-//		JAXBContext jc;
-//		Unmarshaller u;
-//		XPolicies objectPolicies;
-//		
-//		try {
-//			jc = JAXBContext.newInstance("it.polito.dp2.NFFG.sol3.bindings");
-//			SchemaFactory sf = SchemaFactory.newInstance(javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI);
-//			u = jc.createUnmarshaller();
-//			try{
-////				u.setSchema(sf.newSchema(new File("xsd/nffgInfo.xsd")));
-//			}catch(Exception e){
-//				e.printStackTrace();
-//				return Response.status(404).entity(new String("Error Occurred: -1\n" + e.getMessage() +"\nVerify the set of policies are correctly written" )).build(); 
-//			}
-//			StringReader sr = new StringReader(xml);
-//			// Unmarshal Shipping Address
-//	        JAXBElement<XPolicies> je = (JAXBElement<XPolicies>) u.unmarshal(sr);
-//	        objectPolicies = je.getValue();
-//			if(objectPolicies==null){
-//				//TODO: verify if this null is really necessary
-//				return Response.status(404).entity(new String("Error Occurred: -2\n" +"\nVerify the set of policies are correctly written")).build(); 
-//			}
-//			
-//			//TODO: add verification about existence
-//			//successful creation
-//			return Response.status(200).entity("Policies correctly created!!").build() ;
-//		} catch (JAXBException e) {
-//			e.printStackTrace();
-//			return Response.status(404).entity(new String("Error Occurred: -3\n" + e.getStackTrace()+"\nVerify the set of policies are correctly written")).build(); 
-//		}catch (Exception e){
-//			e.printStackTrace();
-//			return Response.status(404).entity(new String("Error Occurred: -4\n" + e.getStackTrace()+"\nVerify the set of policies are correctly written")).build(); 
-//		}
-//	}
+	public static synchronized XNffg deleteNffgByName(String name,String delete_policy) throws NotFoundException,ForbiddenException{
+		
+		if(!mapXNffg.containsKey(name)){
+			throw new NotFoundException(Response.status(404).entity("The requested Nffg does not exists! Impossible to remove it").build());
+		}
+		
+		XNffg xnffg = mapXNffg.get(name);
+		if(delete_policy.equals("y")){
+				mapXNffg.remove(name);
+				//delete related Policy of the given nffg
+				mapXPolicy.values().stream().filter(p->{
+					if(p.getNffg().equals(xnffg.getName())){
+						return true;
+					}
+					else{
+						return false;
+					}
+				}).forEach(p->{
+					mapXPolicy.remove(p.getName());
+				});
+				return xnffg;
+			
+		}else if(delete_policy.equals("n")){
+			int size = 
+				mapXPolicy.values().stream().filter(p->{
+					if(p.getNffg().equals(xnffg.getName())){
+						return true;
+					}
+					else{
+						return false;
+					}
+				}).collect(Collectors.toList()).size();
+			if(size==0){
+				mapXNffg.remove(name);
+				return xnffg;
+			}
+			else{
+				throw new ForbiddenException("Impossible to delete the nffg - at least one policy referring to it exists",Response.status(403).entity("Impossible to delete the nffg - at least one policy referring to it exists").build());
+			}
+		}
+		else{
+			throw new ForbiddenException("You must specify either y/n for delpolicy parameter",
+					Response.status(403).entity("You must specify either y/n for delpolicy parameter").build());
+		}
+	}
+	
+	//TODO: manage policy not existing or nffg not existing
+	public static synchronized XPolicies addXPolicies(XPolicies xpolicies) {
+		try{
+			XPolicies returnedXPolicies = new XPolicies();
+			xpolicies.getPolicy().forEach(p->{
+				if(mapXPolicy.containsKey(p.getName())){
+					System.out.println("At least one policy in the set is already existing");
+					throw new ForbiddenException("At least one policy in the set is already existing",Response.status(403).entity("At least one policy in the set is already existing").build());
+				}
+				if(!mapXNffg.containsKey(p.getNffg())){
+					System.out.println("The nffg corresponding to the policy is not existing");
+					throw new ForbiddenException("The nffg corresponding to the policy is not existing",Response.status(403).entity("The nffg corresponding to the policy is not existing").build());
+				}
+				
+			});
+			
+			List<XPolicy> list = returnedXPolicies.getPolicy();
+			xpolicies.getPolicy().forEach(p->{
+				list.add(addXPolicyVerifyXNffg(p));
+			});
+			
+			return returnedXPolicies;
+		}catch(NullPointerException e){
+			e.printStackTrace();
+			throw new NotFoundException("NullPointerException",Response.status(404).entity("Error- null found").build());
+		}
+	}
+	
+	public static synchronized void deleteAllPolicies(){
+		mapXPolicy.clear();
+	}
+	
+	public static synchronized XPolicy deletePolicyByName(String name) throws NotFoundException{
+		if(mapXPolicy.containsKey(name)){
+			XPolicy xpolicy = mapXPolicy.get(name);
+			mapXPolicy.remove(name);
+			return xpolicy;
+		}
+		else{
+			throw new NotFoundException(Response.status(404).entity("The requested policy does not exists! Impossible to remove it").build());
+		}
+	}
+	
 	
 	private static XMLGregorianCalendar convertCalendar (Calendar cal){
 		Date calendarDate = cal.getTime();
@@ -367,6 +287,8 @@ public class NffgPolicyService {
 		}
 		return date2;
 	}
+
+
 	
 	
 }

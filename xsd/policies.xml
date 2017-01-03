@@ -13,7 +13,7 @@
 			</verification>
 		</policy>
 		
-		<policy>
+		<policy nffg="nffg2">
 			<name>PolicyTraversal1</name>
 			<positivity>true</positivity>
 			<src>nodos1</src>
