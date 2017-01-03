@@ -8,20 +8,17 @@
 	
 	<property name="basedir" location="." />
 	<property name="lib.dir" location="${basedir}/lib" />
+	<property name="build.dir" location="${basedir}/build" />
+	<property name="src.dir" location="${basedir}/src" />
+	
 	<property name="gen.dir" location="${basedir}/gen-src" />
+	<property name="bind.dir" location="${basedir}/gen-bind" />
 	
 	<property name="PORT" value="8080"/>
 	<property name="URLNEO" value="http://localhost:${PORT}/Neo4JXML/rest"/>
 	<property name="WADL" value="${URLNEO}/application.wadl"/>
 	
-	<path id="sol.classpath">
-			<pathelement location="${lib.dir}/NFFG.jar"/>
-			<pathelement location="${lib.dir}/lab2.jar"/>
-			<pathelement location="${lib.dir}/javax.ws.rs-api-2.0.1.jar"/>
-			<pathelement location="${lib.dir}/jersey-client-1.19.1.jar"/>
-	<pathelement location="${lib.dir}/javax.ws.rs-api-2.0.1.jar"/>	
-			<pathelement location="${basedir}/lib-src/jersey-core-1.19.1.jar"/>
-	</path>
+	
 	
 	<!-- define wjc task (WADL to Java) -->
 	<taskdef name="wjc" classname="org.jvnet.ws.wadl2java.WJCTask">
@@ -30,7 +27,7 @@
 	   </classpath>
 	</taskdef>
 	
-	<target name="build-service">
+	<target name="build-service" depends="generate-bindings-xml">
 		<mkdir dir="${gen.dir}"/>
 		<mkdir dir="${build.dir}" />
 		<echo message="I'm generating the artifacts" />
@@ -42,20 +39,39 @@
 	     <depends dir="${basedir}" includes="build.xml"/>
 	    </wjc>
 		
+		<echo>Compiling my classes (if needed)...</echo>
 		<javac destdir="${build.dir}" debug="${debug}" debuglevel="${debuglevel}" source="${source}" target="${target}" includeantruntime="false">
 					<src path="${src.dir}"/>
 					<src path="${gen.dir}"/>
+					<src path="${bind.dir}" />
 					<include name="it/polito/dp2/NFFG/sol3/**" />
 					<classpath>
 						<path refid="test.classpath" />
 					</classpath>
 		</javac>
+		<echo>Done.</echo>
 		
-		<echo>Compiling my classes (if needed)...</echo>
-				
-		
-				<echo>Done.</echo>
-		
+	</target>
+	
+	<!-- Target generate-bindings for xml elements  -->
+	<target name="generate-bindings-xml"  depends="-chk-bindings" description="Generate bindings from schema">
+		<delete dir="${bind.dir}" />
+		<mkdir dir="${bind.dir}" />
+		<exec executable="xjc" failonerror="true" >
+			<arg value="-d" />
+			<arg value="${bind.dir}" />
+			<arg value="-p" />
+			<arg value="it.polito.dp2.NFFG.sol3.bindings" />
+			<arg value="${basedir}/xsd/nffgInfo.xsd" />
+		</exec>
+		<touch file="${bind.dir}/.flagfile" />
+	</target>
+	
+	<!-- Target chk-bindings -->
+	<target name="-chk-bindings">
+		<uptodate property="generate-bindings.notRequired" targetfile="${bind.dir}/.flagfile">
+			<srcfiles dir="${basedir}/xsd" includes="**/*.xsd" />
+		</uptodate>
 	</target>
 	
 </project>

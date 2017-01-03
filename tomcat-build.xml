@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <project basedir="." name="tomcat-build">
-	<import file="build.xml" />
-
 	<description>
 		Script for Controlling Tomcat (to be imported in main build)
 	</description>

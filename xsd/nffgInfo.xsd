@@ -1,23 +1,90 @@
 <?xml version="1.0"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
 	
-	
-	<xsd:element name="nffgs" type="Nffgs">
-		<!-- Uniqueness of nffg name inside the request -->
+
+<!-- 		<xsd:element name="XNffgs"> -->
+<!-- 			<xsd:complexType> -->
+<!-- 		<xsd:sequence> -->
+<!-- 			<xsd:element name="nffg" type="XNffg" maxOccurs="unbounded"> -->
+
+<!-- 				<xsd:key name="node_name"> -->
+<!-- 					<xsd:selector xpath="node" /> -->
+<!-- 					<xsd:field xpath="name" /> -->
+<!-- 				</xsd:key> -->
+
+
+<!-- 				enforce uniqueness of link names inside a nffg -->
+<!-- 				<xsd:key name="link_name"> -->
+<!-- 					<xsd:selector xpath="link" /> -->
+<!-- 					<xsd:field xpath="name" /> -->
+<!-- 				</xsd:key> -->
+
+
+<!-- 				node references for links -->
+<!-- 				<xsd:keyref name="ref_link_src_node" refer="node_name"> -->
+<!-- 					<xsd:selector xpath="link" /> -->
+<!-- 					<xsd:field xpath="src" /> -->
+<!-- 				</xsd:keyref> -->
+
+<!-- 				<xsd:keyref name="ref_link_dst_node" refer="node_name"> -->
+<!-- 					<xsd:selector xpath="link" /> -->
+<!-- 					<xsd:field xpath="dst" /> -->
+<!-- 				</xsd:keyref> -->
+
+<!-- 			</xsd:element> -->
+<!-- 			</xsd:sequence> -->
+<!-- 	</xsd:complexType> -->
+			
+<!-- 			<xsd:key name="nffg_name"> -->
+<!-- 				<xsd:selector xpath="nffg" /> -->
+<!-- 				<xsd:field xpath="name" /> -->
+<!-- 			</xsd:key> -->
+<!-- 		</xsd:element> -->
+
+
+	<xsd:element name="nffgs" type="XNffgs">
 		<xsd:key name="nffg_name">
 			<xsd:selector xpath="nffg" />
 			<xsd:field xpath="name" />
 		</xsd:key>
 	</xsd:element>
-	
-	<xsd:element name="nffg" type="Nffg"/>
-	<xsd:element name="policies" type="Policies"/>
-	<xsd:element name="policy" type="Policy" />
+<!-- 		<xsd:complexType name="XNffgs"> -->
+<!-- 		<xsd:sequence> -->
+<!-- 			<xsd:element name="nffg" type="XNffg" maxOccurs="unbounded"> -->
+
+<!-- 				<xsd:key name="node_name"> -->
+<!-- 					<xsd:selector xpath="node" /> -->
+<!-- 					<xsd:field xpath="name" /> -->
+<!-- 				</xsd:key> -->
+
+
+<!-- 				<xsd:key name="link_name"> -->
+<!-- 					<xsd:selector xpath="link" /> -->
+<!-- 					<xsd:field xpath="name" /> -->
+<!-- 				</xsd:key> -->
+
+
+<!-- 				<xsd:keyref name="ref_link_src_node" refer="node_name"> -->
+<!-- 					<xsd:selector xpath="link" /> -->
+<!-- 					<xsd:field xpath="src" /> -->
+<!-- 				</xsd:keyref> -->
+
+<!-- 				<xsd:keyref name="ref_link_dst_node" refer="node_name"> -->
+<!-- 					<xsd:selector xpath="link" /> -->
+<!-- 					<xsd:field xpath="dst" /> -->
+<!-- 				</xsd:keyref> -->
+
+<!-- 			</xsd:element> -->
+<!-- 			</xsd:sequence> -->
+<!-- 	</xsd:complexType> -->
+	<xsd:element name="nffg" type="XNffg" />
+	<xsd:element name="policy" type="XPolicy" />
+	<xsd:element name="policies" type="XPolicies"/>
 
 	
-	<xsd:complexType name="Nffgs">
+	<xsd:complexType name="XNffgs">
 		<xsd:sequence>
-			<xsd:element name="nffg" type="Nffg" maxOccurs="unbounded">
+			<xsd:element name="nffg" type="XNffg" maxOccurs="unbounded">
 
 				<xsd:key name="node_name">
 					<xsd:selector xpath="node" />
@@ -25,14 +92,13 @@
 				</xsd:key>
 
 
-				<!-- enforce uniqueness of link names inside a nffg -->
+<!-- 								enforce uniqueness of link names inside a nffg -->
 				<xsd:key name="link_name">
 					<xsd:selector xpath="link" />
 					<xsd:field xpath="name" />
 				</xsd:key>
 
 
-				<!-- node references for links -->
 				<xsd:keyref name="ref_link_src_node" refer="node_name">
 					<xsd:selector xpath="link" />
 					<xsd:field xpath="src" />
@@ -49,34 +115,34 @@
 
 
 	<!-- nffg element declaration -->
-	<xsd:complexType name="Nffg">
+	<xsd:complexType name="XNffg">
 		<xsd:sequence>
-			<xsd:element name="name" type="NameType" />
+			<xsd:element name="name" type="XNameType" />
 			<xsd:element name="lastUpdate" type="xsd:dateTime" />
-			<xsd:element name="nodes" type="Nodes" />
-			<xsd:element name="links" type="Links" />
+			<xsd:element name="nodes" type="XNodes" />
+			<xsd:element name="links" type="XLinks" />
 		</xsd:sequence>
 	</xsd:complexType>
 
 <!-- 	Container for all nodes of the Nffg -->
-	<xsd:complexType name="Nodes">
+	<xsd:complexType name="XNodes">
 		<xsd:sequence>
 			<xsd:element name="node" minOccurs="2" maxOccurs="unbounded"
-				type="Node" />
+				type="XNode" />
 		</xsd:sequence>
 	</xsd:complexType>
 
 	<!-- Node declaration -->
-	<xsd:complexType name="Node">
+	<xsd:complexType name="XNode">
 		<xsd:sequence>
-			<xsd:element name="name" type="NameType" />
-			<xsd:element name="functionality" type="Functionality" />
+			<xsd:element name="name" type="XNameType" />
+			<xsd:element name="functionality" type="XFunctionality" />
 		</xsd:sequence>
 
 	</xsd:complexType>
 
 	<!-- Functionalities declaration -->
-	<xsd:simpleType name="Functionality">
+	<xsd:simpleType name="XFunctionality">
 		<xsd:restriction base="xsd:string">
 			<xsd:enumeration value="FW" />
 			<xsd:enumeration value="DPI" />
@@ -92,63 +158,63 @@
 	</xsd:simpleType>
 
 	<!-- Container for the set of all links -->
-	<xsd:complexType name="Links">
+	<xsd:complexType name="XLinks">
 		<xsd:sequence>
 			<xsd:element name="link" minOccurs="1" maxOccurs="unbounded"
-				type="Link" />
+				type="XLink" />
 		</xsd:sequence>
 	</xsd:complexType>
 
 	<!-- Link declaration -->
-	<xsd:complexType name="Link">
+	<xsd:complexType name="XLink">
 		<xsd:sequence>
-			<xsd:element name="name" type="NameType" />
-			<xsd:element name="src" type="NameType" />
-			<xsd:element name="dst" type="NameType" />
+			<xsd:element name="name" type="XNameType" />
+			<xsd:element name="src" type="XNameType" />
+			<xsd:element name="dst" type="XNameType" />
 		</xsd:sequence>
 	</xsd:complexType>
 	
 	<!-- A set of policies of a given Nffg -->
-	<xsd:complexType name="Policies">
+	<xsd:complexType name="XPolicies">
 		<xsd:sequence>
-			<xsd:element name="policy" minOccurs="0" maxOccurs="unbounded"	type="Policy" />
+			<xsd:element name="policy" minOccurs="0" maxOccurs="unbounded"	type="XPolicy" />
 		</xsd:sequence>
 	</xsd:complexType>
 
 	<!-- policy declaration -->
-	<xsd:complexType name="Policy">
+	<xsd:complexType name="XPolicy">
 		<xsd:sequence>
-			<xsd:element name="name" type="NameType" />
+			<xsd:element name="name" type="XNameType" />
 
 			<!--imposed the result not mandatory, can be computed, right? -->
 			<xsd:element name="positivity" type="xsd:boolean" />
-			<xsd:element name="src" type="NameType" />
-			<xsd:element name="dst" type="NameType" />
-			<xsd:element minOccurs="0" maxOccurs="1" name="traversal" type="Traversal" />
+			<xsd:element name="src" type="XNameType" />
+			<xsd:element name="dst" type="XNameType" />
+			<xsd:element minOccurs="0" maxOccurs="1" name="traversal" type="XTraversal" />
 
 			<!-- The element of the verification, include the result of verification, 
 				the date/time and a message with further information -->
 
-			<xsd:element name="verification" type="Verification"
+			<xsd:element name="verification" type="XVerification"
 				minOccurs="0" maxOccurs="1" />
 
 		</xsd:sequence>
  <!-- 		Added for Assignment3 - the reference for the nffg name  -->
-		<xsd:attribute name="nffg" type="NameType"> </xsd:attribute>
+		<xsd:attribute name="nffg" type="XNameType"> </xsd:attribute>
 	</xsd:complexType>
 
 
 
 	<!-- Traversal policy type definition as extension of reachability property -->
-	<xsd:complexType name="Traversal">
+	<xsd:complexType name="XTraversal">
 				<xsd:sequence>
-					<xsd:element name="functionality" type="Functionality"
+					<xsd:element name="functionality" type="XFunctionality"
 						minOccurs="1" maxOccurs="unbounded" />
 				</xsd:sequence>
 	</xsd:complexType>
 
 
-	<xsd:complexType name="Verification">
+	<xsd:complexType name="XVerification">
 		<xsd:sequence>
 			<xsd:element name="verificationTime" type="xsd:dateTime" />
 			<xsd:element name="result" type="xsd:boolean" />
@@ -159,7 +225,7 @@
 
 	<!-- name - the name of the NF-FG to get (a string made of alphanumeric 
 		characters only, where the first character is alphabetic). -->
-	<xsd:simpleType name="NameType">
+	<xsd:simpleType name="XNameType">
 		<xsd:restriction base="xsd:string">
 			<xsd:pattern value="[a-zA-Z_][a-zA-Z0-9_]*" />
 		</xsd:restriction>
