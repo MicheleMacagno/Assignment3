@@ -33,7 +33,6 @@ import it.polito.dp2.NFFG.sol3.bindings.XNffg;
 import it.polito.dp2.NFFG.sol3.bindings.XNffgs;
 import it.polito.dp2.NFFG.sol3.bindings.XPolicies;
 import it.polito.dp2.NFFG.sol3.bindings.XPolicy;
-import it.polito.dp2.NFFG.sol3.bindings.XVerificationRequest;
 
 
 @Path("/")
@@ -118,27 +117,29 @@ public class NffgPolicyWS {
 		return Response.status(200).entity(of.createNffgs(rxnffgs)).build();
 	}
 	
-	@DELETE
-	@Path("/nffgs")
-	public Response deleteAllNffgs(){
-		NffgPolicyService.deleteAllXNffgs();
-		return Response.status(204).build();
-	}
+//NOT TO BE IMPLEMENTED	
+//	@DELETE
+//	@Path("/nffgs")
+//	public Response deleteAllNffgs(){
+//		NffgPolicyService.deleteAllXNffgs();
+//		return Response.status(204).build();
+//	}
 	
-	@DELETE
-	@Path("/nffg/{name: [a-zA-Z_][a-zA-Z0-9_]*}")
-	@Produces(MediaType.APPLICATION_XML)
-	public Response deleteNffgByName(
-			@DefaultValue("y") @QueryParam("delpolicy") String delpolicy
-			,@PathParam("name") String name) throws NotFoundException{
-		
-		if(!(delpolicy.equals("y") || delpolicy.equals("n"))){
-			throw new ForbiddenException("You must specify either y/n for delpolicy parameter",
-					Response.status(403).entity("You must specify either y/n for delpolicy parameter").build());
-		}
-		XNffg rxnffg = NffgPolicyService.deleteNffgByName(name,delpolicy);
-		return Response.status(200).entity(of.createNffg(rxnffg)).build();
-	}
+//NOT TO BE IMPLEMENTED	
+//	@DELETE
+//	@Path("/nffg/{name: [a-zA-Z_][a-zA-Z0-9_]*}")
+//	@Produces(MediaType.APPLICATION_XML)
+//	public Response deleteNffgByName(
+//			@DefaultValue("y") @QueryParam("delpolicy") String delpolicy
+//			,@PathParam("name") String name) throws NotFoundException{
+//		
+//		if(!(delpolicy.equals("y") || delpolicy.equals("n"))){
+//			throw new ForbiddenException("You must specify either y/n for delpolicy parameter",
+//					Response.status(403).entity("You must specify either y/n for delpolicy parameter").build());
+//		}
+//		XNffg rxnffg = NffgPolicyService.deleteNffgByName(name,delpolicy);
+//		return Response.status(200).entity(of.createNffg(rxnffg)).build();
+//	}
 	
 	
 	@POST
@@ -162,6 +163,18 @@ public class NffgPolicyWS {
 		return Response.status(200).entity(of.createPolicy(rxpolicy)).build();
 		
 	}
+	
+	@POST
+	@Path("policy/{name: [a-zA-Z_][a-zA-Z0-9_]*}")
+	@ApiOperation(	value = "Verify an existing policy", notes = "xml format required")
+	@Produces(MediaType.APPLICATION_XML)
+	public Response verifyPolicyByName(
+			@PathParam("name") String name) throws NotFoundException{
+		
+		XPolicy rxpolicy = NffgPolicyService.verifyPolicy(name); 
+		return Response.status(200).entity(of.createPolicy(rxpolicy)).build();
+	}
+	
 	
 	@POST
 	@Path("policies")
@@ -212,15 +225,15 @@ public class NffgPolicyWS {
 		return Response.status(200).entity(of.createPolicy(rxpolicy)).build();
 	}
 	
-	@POST
-	@Path("policies/verification")
-	@Consumes(MediaType.APPLICATION_XML)
-	@Produces(MediaType.APPLICATION_XML)
-	public Response verifyPolicyByName(XVerificationRequest xverificationrequest) throws NotFoundException{
-		XPolicies verified = NffgPolicyService.verifyPolicies(xverificationrequest);
-		return Response.status(200).entity(verified).build();
-	}
-	
+//	@POST
+//	@Path("policies/verification")
+//	@Consumes(MediaType.APPLICATION_XML)
+//	@Produces(MediaType.APPLICATION_XML)
+//	public Response verifyPolicyByName(XVerificationRequest xverificationrequest) throws NotFoundException{
+//		XPolicies verified = NffgPolicyService.verifyPolicies(xverificationrequest);
+//		return Response.status(200).entity(verified).build();
+//	}
+//	
 	
 	
 	

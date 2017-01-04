@@ -1,5 +1,6 @@
 package it.polito.dp2.NFFG.sol3.service;
 
+import java.util.LinkedHashMap;
 import java.util.concurrent.*;
 
 import it.polito.dp2.NFFG.sol3.bindings.*;
@@ -7,7 +8,10 @@ import it.polito.dp2.NFFG.sol3.bindings.*;
 public class NffgDB {
 	private static ConcurrentHashMap<String,XNffg> mapXNffg = new ConcurrentHashMap<String,XNffg>();
 	private static ConcurrentHashMap<String,XPolicy> mapXPolicy = new ConcurrentHashMap<String,XPolicy>();
-
+//	private static ConcurrentHashMap<String,Node> mapNameNodesNeo  = new ConcurrentHashMap<String,Node>();
+	//stores the mapping between the Name of the Node and the relative ID
+	private static ConcurrentHashMap<String,Integer> mapNameNodesNeo  = new ConcurrentHashMap<String,Integer>();
+	
 	public static ConcurrentHashMap<String,XNffg> getMapXNffg(){
 		return mapXNffg;
 	}

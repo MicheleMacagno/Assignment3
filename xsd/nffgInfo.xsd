@@ -80,7 +80,7 @@
 	<xsd:element name="nffg" type="XNffg" />
 	<xsd:element name="policy" type="XPolicy" />
 	<xsd:element name="policies" type="XPolicies"/>
-	<xsd:element name="verification" type="XVerificationRequest"/>
+<!-- 	<xsd:element name="verification" type="XVerificationRequest"/> -->
 
 	
 	<xsd:complexType name="XNffgs">
@@ -223,11 +223,11 @@
 		</xsd:sequence>
 	</xsd:complexType>
 	
-	<xsd:complexType name="XVerificationRequest">
-		<xsd:sequence>
-			<xsd:element name="policyname" type="XNameType" minOccurs="1" maxOccurs="unbounded"/>
-		</xsd:sequence>
-	</xsd:complexType>
+<!-- 	<xsd:complexType name="XVerificationRequest"> -->
+<!-- 		<xsd:sequence> -->
+<!-- 			<xsd:element name="policyname" type="XNameType" minOccurs="1" maxOccurs="unbounded"/> -->
+<!-- 		</xsd:sequence> -->
+<!-- 	</xsd:complexType> -->
 	
 
 	<!-- name - the name of the NF-FG to get (a string made of alphanumeric 

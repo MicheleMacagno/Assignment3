@@ -89,8 +89,9 @@ public class NffgPolicyService {
 			
 			NffgPolicyService nps = new NffgPolicyService();
 			
-			//TODO: modify it in order to avoid the deletion
-			if(mapXNffg.putIfAbsent(nffg.getName(), nffg) == null){
+//TODO: modify it in order to avoid the deletion
+//			if(mapXNffg.putIfAbsent(nffg.getName(), nffg) == null){
+			if(!mapXNffg.containsKey(nffg.getName())){	
 				//able to insert the element in the map
 				System.out.println("Nffg corretly inserted in the map");
 				Calendar c = Calendar.getInstance();
@@ -176,7 +177,7 @@ public class NffgPolicyService {
 			}
 
 				
-					//RELATIONSHIPS - LINKS
+		//RELATIONSHIPS - LINKS
 					for(XLink l : nffg.getLinks().getLink()){
 						String srcId = mapNameNodesNeo.get(l.getSrc());
 						String dstId = mapNameNodesNeo.get(l.getDst());
@@ -213,7 +214,7 @@ public class NffgPolicyService {
 					}
 				
 					
-					//RELATIONSHIPS of NFFG node
+		//RELATIONSHIPS of NFFG node to define connection to Nffg Node
 					for(Node n : listNode){
 						String srcId = mapNameNodesNeoNffg.get(nffg.getName());
 						System.out.println("NDFFG ID: " + srcId + nffg.getName() );
@@ -251,15 +252,12 @@ public class NffgPolicyService {
 						}
 					}
 					
-				//TODO:add links to every  node
-				
-				//
+				mapXNffg.put(nffg.getName(), nffg);
 				return nffg;
 			}
 			else{
 				System.out.println("Error - Nffg name already existing");
 				throw new ForbiddenException("Error - Nffg name already existing",Response.status(403).entity("Error - Nffg name already existing").build());
-//				return null;
 			}
 	}
 	
@@ -336,58 +334,6 @@ public class NffgPolicyService {
 		return returnedXNffgs;
 	}
 	
-	public static synchronized void deleteAllXNffgs(){
-		mapXNffg.clear();
-		//when removing an nffg also the relative policies are removed
-		deleteAllPolicies();
-	}
-	
-	public static synchronized XNffg deleteNffgByName(String name,String delete_policy) throws NotFoundException,ForbiddenException{
-		
-		if(!mapXNffg.containsKey(name)){
-			throw new NotFoundException(Response.status(404).entity("The requested Nffg does not exists! Impossible to remove it").build());
-		}
-		
-		XNffg xnffg = mapXNffg.get(name);
-		if(delete_policy.equals("y")){
-				mapXNffg.remove(name);
-				//delete related Policy of the given nffg
-				mapXPolicy.values().stream().filter(p->{
-					if(p.getNffg().equals(xnffg.getName())){
-						return true;
-					}
-					else{
-						return false;
-					}
-				}).forEach(p->{
-					mapXPolicy.remove(p.getName());
-				});
-				return xnffg;
-			
-		}else if(delete_policy.equals("n")){
-			int size = 
-				mapXPolicy.values().stream().filter(p->{
-					if(p.getNffg().equals(xnffg.getName())){
-						return true;
-					}
-					else{
-						return false;
-					}
-				}).collect(Collectors.toList()).size();
-			if(size==0){
-				mapXNffg.remove(name);
-				return xnffg;
-			}
-			else{
-				throw new ForbiddenException("Impossible to delete the nffg - at least one policy referring to it exists",Response.status(403).entity("Impossible to delete the nffg - at least one policy referring to it exists").build());
-			}
-		}
-		else{
-			throw new ForbiddenException("You must specify either y/n for delpolicy parameter",
-					Response.status(403).entity("You must specify either y/n for delpolicy parameter").build());
-		}
-	}
-	
 	//TODO: manage policy not existing or nffg not existing
 	public static synchronized XPolicies addXPolicies(XPolicies xpolicies) {
 		try{
@@ -444,19 +390,55 @@ public class NffgPolicyService {
 		}
 	}
 	
-	public static synchronized XPolicies verifyPolicies(XVerificationRequest xvr){
-		XPolicies xpolicies = new XPolicies();
-		xvr.getPolicyname().forEach(p->{
-			if(!mapXPolicy.containsKey(p)){
-				throw new NotFoundException("Error - At least one policy for which you are requiring the verification is not existing.",
-						Response.status(404).entity("Error - At least one policy for which you are requiring the verification is not existing.").build());
-			}
-			//TODO: check about TRAVERSAL POLICY/ only reachability must be verified
-		});
+//TODO: test the verification
+	public static synchronized XPolicy verifyPolicy(String name){
+		NffgPolicyService nps = new NffgPolicyService();
+		XPolicy xpolicy = mapXPolicy.get(name);
+
+		if(xpolicy==null){
+			throw new NotFoundException("Unable to find the policy to validate",
+					Response.status(404).entity("Unable to find the policy to validate").build());
+		}
 		
-		//TODO: verify using neo4j
-		return null;
+		try{
+			String resourceName = nps.baseServiceUrlneo + "/resource/node/"+
+					xpolicy.getSrc()+ 
+					"/path?dst="+xpolicy.getDst();
+
+			Paths paths = nps.client.resource(resourceName)
+					.type("application/xml")
+					.accept("application/xml")
+					.get(Paths.class);
+		
+			System.out.println("Found n paths: " + paths.getPath().size());
+			
+			XVerification xv = new XVerification();
+			if(paths.getPath().size()==0){
+				//the policy is not satisfied
+				xv.setMessage("The reachability policy is not satisfied");
+				xv.setResult(false);
+				
+			}
+			else{
+				//at least one path found - policy satisfied
+				xv.setMessage("The reachability policy is satisfied!!");
+				xv.setResult(true);
+			}
+			Calendar c = Calendar.getInstance();
+			c.setTimeZone(TimeZone.getDefault());
+			xv.setVerificationTime(NffgPolicyService.convertCalendar(c));
+			
+			xpolicy.setVerification(xv);
+		}catch(Exception e){
+			System.out.println("Error in retrieving the paths");
+			e.printStackTrace();
+			throw new NotFoundException("Unable to find a resource for validation",
+					Response.status(404).entity("Unable to find a resource for validation").build());
+		}
+		
+		return xpolicy;
 	}
+	
 	
 	
 	private static XMLGregorianCalendar convertCalendar (Calendar cal){
@@ -475,8 +457,131 @@ public class NffgPolicyService {
 		}
 		return date2;
 	}
-
-
-	
 	
 }
+
+
+
+//public static synchronized void deleteAllXNffgs(){
+//mapXNffg.clear();
+////when removing an nffg also the relative policies are removed
+//deleteAllPolicies();
+//}
+
+//public static synchronized XNffg deleteNffgByName(String name,String delete_policy) throws NotFoundException,ForbiddenException{
+//
+//NffgPolicyService nps = new NffgPolicyService();
+////delete from neo4j
+//
+//if(!mapXNffg.containsKey(name)){
+//	throw new NotFoundException(Response.status(404).entity("The requested Nffg does not exists! Impossible to remove it").build());
+//}
+//
+//XNffg xnffg = mapXNffg.get(name);
+//
+//
+//if(delete_policy.equals("y")){
+//		
+////		deleteFromNeo4J(xnffg,nps);
+//	
+//		mapXNffg.remove(name);
+//		
+//		
+//		//delete related Policy of the given nffg
+//		mapXPolicy.values().stream().filter(p->{
+//			if(p.getNffg().equals(xnffg.getName())){
+//				return true;
+//			}
+//			else{
+//				return false;
+//			}
+//		}).forEach(p->{
+//			mapXPolicy.remove(p.getName());
+//		});
+//		
+//		
+//		return xnffg;
+//	
+//}else if(delete_policy.equals("n")){
+//	int size = 
+//		mapXPolicy.values().stream().filter(p->{
+//			if(p.getNffg().equals(xnffg.getName())){
+//				return true;
+//			}
+//			else{
+//				return false;
+//			}
+//		}).collect(Collectors.toList()).size();
+//	
+//	//no policies, I can remove the nffg
+//	if(size==0){
+//		
+////		deleteFromNeo4J(xnffg,nps);
+//		
+//		mapXNffg.remove(name);
+//		return xnffg;
+//	}
+//	else{
+//		throw new ForbiddenException("Impossible to delete the nffg - at least one policy referring to it exists",Response.status(403).entity("Impossible to delete the nffg - at least one policy referring to it exists").build());
+//	}
+//}
+//else{
+//	throw new ForbiddenException("You must specify either y/n for delpolicy parameter",
+//			Response.status(403).entity("You must specify either y/n for delpolicy parameter").build());
+//}
+//}
+
+//private static synchronized void deleteFromNeo4J(XNffg xnffg,NffgPolicyService nps) throws NotFoundException{
+//
+//for(XNode x : xnffg.getNodes().getNode()){
+//	try{
+//		String resourceName = nps.baseServiceUrlneo + "/resource/node/" + mapNameNodesNeo.get(x.getName());
+//		Response response = nps.client.resource(resourceName)
+//				.type("text/plain")
+//				.accept("application/xml")
+//				.delete(Response.class);
+//		
+//		if(response.getStatus()>=400){
+//			throw new Exception("Error in deleting the node");
+//		}
+//		System.out.println("Response of server: \t");
+//		//create a mapping between name and id of nodes stored in the neo4j service
+//		System.out.println("Node deleted: " + response.getEntity().toString());
+//		mapNameNodesNeo.remove(x.getName()); 
+//	}catch(Exception e){
+//		System.out.println("Something was wrong while deleting a noe from neo4j");
+//		e.printStackTrace();
+//		//TODO verify it
+//		
+//		//TODO: manage deletion of the node from the map
+//		throw new NotFoundException("Something was wrong while contacting neo4j to insert a node",
+//				Response.status(404).entity("Something was wrong while contacting neo4j to insert a node").build());
+//	}
+//}
+////TODO - remove this unuseful redundancy		
+////delete the node of the nffg
+//try{
+//	String resourceName = nps.baseServiceUrlneo + "/resource/node/" + mapNameNodesNeoNffg.get(xnffg.getName());
+//	Response response = nps.client.resource(resourceName)
+//			.type("text/plain")
+//			.accept("application/xml")
+//			.delete(Response.class);
+//	
+//	if(response.getStatus()>=400){
+//		throw new Exception("Error in deleting the node");
+//	}
+//	System.out.println("Response of server: \t");
+//	//create a mapping between name and id of nodes stored in the neo4j service
+//	System.out.println("Node deleted: " + response.getEntity().toString());
+//	mapNameNodesNeoNffg.remove(xnffg.getName()); 
+//}catch(Exception e){
+//	System.out.println("Something was wrong while deleting a noe from neo4j");
+//	e.printStackTrace();
+//	//TODO verify it
+//	
+//	//TODO: manage deletion of the node from the map
+//	throw new NotFoundException("Something was wrong while contacting neo4j to insert a node",
+//			Response.status(404).entity("Something was wrong while contacting neo4j to insert a node").build());
+//}
+//
+//}
