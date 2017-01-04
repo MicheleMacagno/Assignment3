@@ -226,22 +226,85 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 	}
 
 	@Override
-	public void loadReachabilityPolicy(String name, String nffgName, boolean isPositive, String srcNodeName,
-			String dstNodeName) throws UnknownNameException, ServiceException {
-		// TODO Auto-generated method stub
+	public void loadReachabilityPolicy(String name, String nffgName, boolean isPositive, String srcNodeName,String dstNodeName) throws UnknownNameException, ServiceException {
+		XPolicy xpolicy = new XPolicy();
+		xpolicy.setName(name);
+		xpolicy.setNffg(nffgName);
+		xpolicy.setSrc(srcNodeName);
+		xpolicy.setDst(dstNodeName);
+		xpolicy.setPositivity(isPositive);
+		
+		String resourceName = baseServiceUrl + "/policy?overwrite=y";
+		XPolicy response;
+		try{
+			response = client.resource(resourceName)
+					.accept(MediaType.APPLICATION_XML)
+					.type(MediaType.APPLICATION_XML)
+					.post(XPolicy.class,xpolicy);
+		}catch(NotFoundException e){
+			e.printStackTrace();
+			System.out.println(e.getMessage());
+			throw new UnknownNameException("Error - Nffg referring to the policy is not existing");
+			
+		}
+		catch(Exception e){
+			e.printStackTrace();
+			System.out.println(e.getMessage());
+			throw new ServiceException("Error - Policy Unexpected error while creating the set of policies");
+		}
 		
 	}
 
 	@Override
 	public void unloadReachabilityPolicy(String name) throws UnknownNameException, ServiceException {
-		// TODO Auto-generated method stub
+		String resourceName = baseServiceUrl + "/policy/"+ name;
+		XPolicy response;
+		try{
+			response = client.resource(resourceName)
+					.accept(MediaType.APPLICATION_XML)
+					.type(MediaType.APPLICATION_XML)
+					.delete(XPolicy.class);
+		}catch(NotFoundException e){
+			e.printStackTrace();
+			System.out.println(e.getMessage());
+			throw new UnknownNameException("Error - The policy you want to delete is not existing");
+			
+		}
+		catch(Exception e){
+			e.printStackTrace();
+			System.out.println(e.getMessage());
+			throw new ServiceException("Error - Policy unexpected error during deletion of the policy");
+		}
 		
 	}
 
 	@Override
 	public boolean testReachabilityPolicy(String name) throws UnknownNameException, ServiceException {
-		// TODO Auto-generated method stub
-		return false;
+		String resourceName = baseServiceUrl + "/policy/"+ name;
+		XPolicy response;
+		try{
+			response = client.resource(resourceName)
+					.accept(MediaType.APPLICATION_XML)
+					.type(MediaType.APPLICATION_XML)
+					.post(XPolicy.class);
+		}catch(NotFoundException e){
+			e.printStackTrace();
+			System.out.println(e.getMessage());
+			throw new UnknownNameException("Error - The policy you want to verify is not existing");
+			
+		}
+		catch(Exception e){
+			e.printStackTrace();
+			System.out.println(e.getMessage());
+			throw new ServiceException("Error - Policy unexpected error during deletion of the policy");
+		}
+		
+		if(response.getTraversal()!=null){
+			System.out.println("Error - The policy is a Traversal one, not a reachability one!!");
+			throw new ServiceException("Error - The policy is a Traversal one, not a reachability one!! - can't be verified");
+		}
+		
+		return response.getVerification().isResult();
 	}
 	
 	private XMLGregorianCalendar convertCalendar (Calendar cal){
