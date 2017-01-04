@@ -93,7 +93,7 @@ public class NffgPolicyService {
 //			if(mapXNffg.putIfAbsent(nffg.getName(), nffg) == null){
 			if(!mapXNffg.containsKey(nffg.getName())){	
 				//able to insert the element in the map
-				System.out.println("Nffg corretly inserted in the map");
+				
 				Calendar c = Calendar.getInstance();
 				c.setTimeZone(TimeZone.getDefault());
 				nffg.setLastUpdate(NffgPolicyService.convertCalendar(c));
@@ -253,6 +253,7 @@ public class NffgPolicyService {
 					}
 					
 				mapXNffg.put(nffg.getName(), nffg);
+				System.out.println("Nffg corretly inserted in the map");
 				return nffg;
 			}
 			else{

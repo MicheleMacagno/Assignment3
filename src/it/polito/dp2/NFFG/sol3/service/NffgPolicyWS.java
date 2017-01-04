@@ -111,7 +111,7 @@ public class NffgPolicyWS {
 	@GET
 	@Path("/nffgs")
 	@Produces(MediaType.APPLICATION_XML)
-	public Response getNffgs()/* throws NotFoundException*/{
+	public Response getNffgs(){
 		
 		XNffgs rxnffgs = NffgPolicyService.getXNffgs();
 		return Response.status(200).entity(of.createNffgs(rxnffgs)).build();
