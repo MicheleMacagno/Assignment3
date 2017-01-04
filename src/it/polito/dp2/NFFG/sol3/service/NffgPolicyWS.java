@@ -11,6 +11,7 @@ import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.GET;
+import javax.ws.rs.NotAllowedException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -147,9 +148,17 @@ public class NffgPolicyWS {
 	@ApiOperation(	value = "Create a new Policy", notes = "xml format required")
 	@Produces(MediaType.APPLICATION_XML)
 	@Consumes(MediaType.APPLICATION_XML)
-	public Response storePolicyByName(@Context UriInfo uriInfo,XPolicy xpolicy) throws BadRequestException, ForbiddenException{
-		XPolicy rxpolicy = NffgPolicyService.addXPolicyVerifyXNffg(xpolicy);
-		
+	public Response storePolicyByName(@DefaultValue("n") @QueryParam("overwrite") String overwrite,
+										@Context UriInfo uriInfo,XPolicy xpolicy) throws BadRequestException, ForbiddenException{
+		XPolicy rxpolicy=null;
+		if(overwrite.equals("y")){
+			rxpolicy = NffgPolicyService.addXPolicyVerifyXNffg(xpolicy,true);
+		}
+		else if(overwrite.equals("n")){
+			rxpolicy = NffgPolicyService.addXPolicyVerifyXNffg(xpolicy,false);
+		}else{
+			throw new NotFoundException("overwrite must be y or n",Response.status(404).entity("overwrite must be y or n").build());
+		}
 		URI uri = uriInfo.getAbsolutePathBuilder().path(rxpolicy.getName()).build();
 		return Response.created(uri).entity(of.createPolicy(rxpolicy)).build();
 	}
@@ -175,15 +184,26 @@ public class NffgPolicyWS {
 		return Response.status(200).entity(of.createPolicy(rxpolicy)).build();
 	}
 	
-	
+//TODO: verify the NOT ALLOWED exception error 405
 	@POST
 	@Path("policies")
 	@ApiOperation(	value = "Create new set of policies", notes = "xml format required")
 	@Produces(MediaType.APPLICATION_XML)
 	@Consumes(MediaType.APPLICATION_XML)
-	public Response storePolicies(XPolicies xpolicies) throws ForbiddenException {
-		
-		XPolicies rxpolicies = NffgPolicyService.addXPolicies(xpolicies);
+	public Response storePolicies(@DefaultValue("n") @QueryParam("overwrite") String overwrite,
+								XPolicies xpolicies) throws ForbiddenException,NotFoundException {
+		XPolicies rxpolicies=null;
+		if(overwrite.equals("y")){
+			rxpolicies = NffgPolicyService.addXPolicies(xpolicies,true);
+		}
+		else if(overwrite.equals("n")){
+			rxpolicies = NffgPolicyService.addXPolicies(xpolicies,false);
+		}
+		else{
+			throw new NotAllowedException("The parameter overwrite can be only y or n",
+					Response.status(405).entity("The parameter overwrite can be only y or n").build());
+		}
+			
 		if(xpolicies != null){
 			return Response.status(200).entity(of.createPolicies(rxpolicies)).build();
 		}

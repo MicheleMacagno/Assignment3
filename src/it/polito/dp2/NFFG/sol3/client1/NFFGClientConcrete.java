@@ -10,6 +10,10 @@ import it.polito.dp2.NFFG.sol3.bindings.XLink;
 import it.polito.dp2.NFFG.sol3.bindings.XNffg;
 import it.polito.dp2.NFFG.sol3.bindings.XNffgs;
 import it.polito.dp2.NFFG.sol3.bindings.XNodes;
+import it.polito.dp2.NFFG.sol3.bindings.XPolicies;
+import it.polito.dp2.NFFG.sol3.bindings.XPolicy;
+import it.polito.dp2.NFFG.sol3.bindings.XTraversal;
+import it.polito.dp2.NFFG.sol3.bindings.XVerification;
 import it.polito.dp2.NFFG.sol3.bindings.XNode;
 import com.sun.jersey.api.client.Client;
 
@@ -22,6 +26,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.ForbiddenException;
+import javax.ws.rs.NotAllowedException;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.MediaType;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
@@ -89,7 +95,7 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 	
 	/*
 	 * Method used to prepare a Nffg to send it to the web service.
-	 * Usedb by mane methods
+	 * Used by mane methods
 	 */
 	private XNffg prepareXNffg(NffgReader nr){
 		XNffg xnffg = new XNffg();
@@ -119,12 +125,48 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 		});
 		return xnffg;
 	}
+	
+	/*
+	 * Method used to prepare a Policy to send it to the web service.
+	 * Used by mane methods
+	 */
+	private XPolicy prepareXPolicy(PolicyReader pr){
+		XPolicy xpolicy = new XPolicy();
+		xpolicy.setName(pr.getName());
+		xpolicy.setNffg(pr.getNffg().getName());
+		xpolicy.setPositivity(pr.isPositive());
+		
+		//policy verification data
+		XVerification xverification = new XVerification();
+		xverification.setMessage(pr.getResult().getVerificationResultMsg());
+		xverification.setVerificationTime(this.convertCalendar(pr.getResult().getVerificationTime()));
+		xverification.setResult(pr.getResult().getVerificationResult());
+
+		//policy source/destination
+		if(pr instanceof ReachabilityPolicyReader){
+			xpolicy.setSrc(((ReachabilityPolicyReader) pr).getSourceNode().getName());
+			xpolicy.setDst(((ReachabilityPolicyReader) pr).getDestinationNode().getName());
+		}
+		//for traversal policies also include the traversed functions 
+		if(pr instanceof TraversalPolicyReader){
+			xpolicy.setSrc(((ReachabilityPolicyReader) pr).getSourceNode().getName());
+			xpolicy.setDst(((ReachabilityPolicyReader) pr).getDestinationNode().getName());
+			XTraversal xtraversal = new XTraversal();
+			((TraversalPolicyReader) pr).getTraversedFuctionalTypes().stream().forEach(f->{
+				XFunctionality.fromValue(f.toString());
+				xtraversal.getFunctionality().add(XFunctionality.fromValue(f.toString()));
+			});
+			xpolicy.setTraversal(xtraversal);
+		}
+		return xpolicy;
+	}
 
 	@Override
 	public void loadAll() throws AlreadyLoadedException, ServiceException {
 	
 //		LinkedHashMap<String,XNffg> mapXNffg = new LinkedHashMap<String,XNffg>();
 		Set<NffgReader> nffgsToAdd = monitor.getNffgs();
+		Set<PolicyReader> policiesToAdd = monitor.getPolicies();
 		XNffgs response=null;
 		//verify there are no duplicated nffgs in the system
 		
@@ -135,6 +177,7 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 		}
 		
 		String resourceName = baseServiceUrl + "/nffgs";
+		//send the set of nffgs without policies
 		try{
 			response = client.resource(resourceName)
 					.accept(MediaType.APPLICATION_XML)
@@ -149,9 +192,37 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 			System.out.println(e.getMessage());
 			throw new ServiceException("Error - Nffgs Unexpected error while creating the set of nffgs");
 		}
-//TODO -- SONO arrivato qui		
-		//eventually remove the policies
 		
+		//eventually remove the policies
+		XPolicies xpolicies = new XPolicies();
+		for(PolicyReader pr : policiesToAdd){
+			XPolicy xpolicy = this.prepareXPolicy(pr);
+			xpolicies.getPolicy().add(xpolicy);
+		}
+		
+		//send the set of policies all together
+		resourceName = baseServiceUrl + "/policies?overwrite=y";
+		XPolicies responseP;
+		try{
+			responseP = client.resource(resourceName)
+					.accept(MediaType.APPLICATION_XML)
+					.type(MediaType.APPLICATION_XML)
+					.post(XPolicies.class,xpolicies);
+		}catch(NotAllowedException e){
+			e.printStackTrace();
+			System.out.println(e.getMessage());
+			throw new ServiceException("Error - Wrong query url! Use ?overwrite=y");
+		}catch(NotFoundException e){
+			e.printStackTrace();
+			System.out.println(e.getMessage());
+			throw new ServiceException("Error - Nffg referring to a policy is not existing");
+			
+		}
+		catch(Exception e){
+			e.printStackTrace();
+			System.out.println(e.getMessage());
+			throw new ServiceException("Error - Policies Unexpected error while creating the set of policies");
+		}
 	}
 
 	@Override
