@@ -7,8 +7,17 @@ public class NFFGClientFactory extends it.polito.dp2.NFFG.lab3.NFFGClientFactory
 
 	@Override
 	public NFFGClient newNFFGClient() throws NFFGClientException {
-		// TODO Auto-generated method stub
-		return null;
+		NFFGClient concreteClient = null;
+		try{
+			concreteClient = new NFFGClientConcrete();
+			if(concreteClient==null)
+				throw new NFFGClientException("Impossible to instantiate the NFFGClient!");
+			
+		}catch(Exception e){
+			e.printStackTrace();
+			throw new NFFGClientException("Impossible to instantiate the NFFGClient!");
+		}
+		return concreteClient;
 	}
 
 }
