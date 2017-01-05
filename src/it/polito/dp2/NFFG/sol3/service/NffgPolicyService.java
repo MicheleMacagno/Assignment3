@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.ForbiddenException;
+import javax.ws.rs.NotAllowedException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
 import javax.xml.bind.JAXBContext;
@@ -335,9 +336,8 @@ public class NffgPolicyService {
 			}
 		});
 		
-		List<XNffg> list = returnedXNffgs.getNffg();
 		xnffgs.getNffg().forEach(n->{
-			list.add(addXNffg(n));
+			returnedXNffgs.getNffg().add(addXNffg(n));
 		});
 		
 		return returnedXNffgs;
@@ -358,6 +358,7 @@ public class NffgPolicyService {
 			
 			//if you can't overwrite the policy, verify no policies are alreaddy existing
 			if(!overwrite){
+				System.out.println("Not Overwriting Policies");
 				xpolicies.getPolicy().forEach(p->{
 					if(mapXPolicy.containsKey(p.getName())){
 						System.out.println("At least one policy in the set is already existing");
@@ -365,7 +366,10 @@ public class NffgPolicyService {
 					}
 				});
 			}
-			
+			else{
+				System.out.println("Overwriting Policies");
+
+			}
 			List<XPolicy> list = returnedXPolicies.getPolicy();
 			xpolicies.getPolicy().forEach(p->{
 				list.add(addXPolicyVerifyXNffg(p,overwrite));
@@ -412,15 +416,20 @@ public class NffgPolicyService {
 		XPolicy xpolicy = mapXPolicy.get(name);
 
 		if(xpolicy==null){
+			
+			System.out.println("--Error impossible to find the policy in the database");
 			throw new NotFoundException("Unable to find the policy to validate",
 					Response.status(404).entity("Unable to find the policy to validate").build());
 		}
 		
 		try{
 			String resourceName = nps.baseServiceUrlneo + "/resource/node/"+
-					xpolicy.getSrc()+ 
-					"/path?dst="+xpolicy.getDst();
-
+					mapNameNodesNeo.get(xpolicy.getSrc()) + 
+					"/paths?dst="+mapNameNodesNeo.get(xpolicy.getDst());
+			
+			System.out.println("+++++++++++++++++RESUORCE URL+++++++++++++++++++++");
+			System.out.println(resourceName);
+			
 			Paths paths = nps.client.resource(resourceName)
 					.type("application/xml")
 					.accept("application/xml")
@@ -446,8 +455,8 @@ public class NffgPolicyService {
 			
 			xpolicy.setVerification(xv);
 		}catch(Exception e){
-			System.out.println("Error in retrieving the paths");
 			e.printStackTrace();
+			System.out.println("Error in retrieving the paths" + e.getMessage());
 			throw new NotFoundException("Unable to find a resource for validation",
 					Response.status(404).entity("Unable to find a resource for validation").build());
 		}

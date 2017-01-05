@@ -109,6 +109,17 @@ public class NffgPolicyWS {
 		}
   	}
 	
+//	@POST
+//	@Path("nffgs")
+//	@ApiOperation(	value = "Create new nffgs", notes = "xml format required")
+//	@Produces(MediaType.APPLICATION_XML)
+//	@Consumes(MediaType.APPLICATION_XML)
+//	public XNffgs storeNffgsByName(XNffgs xnffgs) throws ForbiddenException {
+//		
+//		XNffgs rxnffgs = NffgPolicyService.addXNffgs(xnffgs);
+//		return rxnffgs;
+//  	}
+	
 	@GET
 	@Path("/nffgs")
 	@Produces(MediaType.APPLICATION_XML)
@@ -148,7 +159,7 @@ public class NffgPolicyWS {
 	@ApiOperation(	value = "Create a new Policy", notes = "xml format required")
 	@Produces(MediaType.APPLICATION_XML)
 	@Consumes(MediaType.APPLICATION_XML)
-	public Response storePolicyByName(@DefaultValue("n") @QueryParam("overwrite") String overwrite,
+	public Response storePolicyByName(@DefaultValue("y") @QueryParam("overwrite") String overwrite,
 										@Context UriInfo uriInfo,XPolicy xpolicy) throws BadRequestException, ForbiddenException{
 		XPolicy rxpolicy=null;
 		if(overwrite.equals("y")){
@@ -190,13 +201,16 @@ public class NffgPolicyWS {
 	@ApiOperation(	value = "Create new set of policies", notes = "xml format required")
 	@Produces(MediaType.APPLICATION_XML)
 	@Consumes(MediaType.APPLICATION_XML)
-	public Response storePolicies(@DefaultValue("n") @QueryParam("overwrite") String overwrite,
-								XPolicies xpolicies) throws ForbiddenException,NotFoundException {
+	public Response storePolicies(
+								XPolicies xpolicies,
+								@DefaultValue("y") @QueryParam("overwrite") String overwrite) throws ForbiddenException,NotFoundException,Exception {
 		XPolicies rxpolicies=null;
 		if(overwrite.equals("y")){
+			System.out.println("Overwriting Policies");
 			rxpolicies = NffgPolicyService.addXPolicies(xpolicies,true);
 		}
 		else if(overwrite.equals("n")){
+			System.out.println("Not Overwriting Policies");
 			rxpolicies = NffgPolicyService.addXPolicies(xpolicies,false);
 		}
 		else{
@@ -204,7 +218,7 @@ public class NffgPolicyWS {
 					Response.status(405).entity("The parameter overwrite can be only y or n").build());
 		}
 			
-		if(xpolicies != null){
+		if(rxpolicies != null){
 			return Response.status(200).entity(of.createPolicies(rxpolicies)).build();
 		}
 		else{
@@ -231,9 +245,14 @@ public class NffgPolicyWS {
 	@DELETE
 	@Path("/policy/{name: [a-zA-Z_][a-zA-Z0-9_]*}")
 	@Produces(MediaType.APPLICATION_XML)
-	public Response deletePolicyByName(@PathParam("name") String name) throws NotFoundException{
-		XPolicy rxpolicy = NffgPolicyService.deletePolicyByName(name);
-		return Response.status(200).entity(of.createPolicy(rxpolicy)).build();
+	public Response deletePolicyByName(@PathParam("name") String name) throws NotFoundException,Exception{
+		try{
+			XPolicy rxpolicy = NffgPolicyService.deletePolicyByName(name);
+			return Response.status(200).entity(of.createPolicy(rxpolicy)).build();
+		}catch(NotFoundException e){
+			return Response.status(404).entity("-------------------ERROR NOT FOUND-----------").build();
+//			throw new NotFoundException();
+		}
 	}
 	
 	@PUT

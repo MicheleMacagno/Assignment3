@@ -44,6 +44,7 @@ public abstract class NFFGClientFactory {
 		}
 		
 		String className = System.getProperty(propertyName);
+		System.out.println(className);
 		if (className == null) {
 			throw new FactoryConfigurationError("cannot create a new instance of a NFFGClientFactory"
 												+ "since the system property '" + propertyName + "'"

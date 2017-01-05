@@ -10,9 +10,9 @@ public class NFFGClientFactory extends it.polito.dp2.NFFG.lab3.NFFGClientFactory
 		NFFGClient concreteClient = null;
 		try{
 			concreteClient = new NFFGClientConcrete();
-			if(concreteClient==null)
+			if(concreteClient==null){
 				throw new NFFGClientException("Impossible to instantiate the NFFGClient!");
-			
+			}	
 		}catch(Exception e){
 			e.printStackTrace();
 			throw new NFFGClientException("Impossible to instantiate the NFFGClient!");
