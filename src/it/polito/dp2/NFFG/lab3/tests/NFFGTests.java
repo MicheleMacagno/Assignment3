@@ -100,7 +100,7 @@ public class NFFGTests {
 
 	@Test
 	public final void testLoadUnloadPolicy() {
-		System.out.println("DEBUG: starting testloadunloadpolicy");
+		System.out.println("DEBUG: starting testloadunloadpolicy PROVA");
 			int rightPolicyNumber = referenceNffgVerifier.getPolicies(referenceNFFG.getName()).size();
 		try {
 			

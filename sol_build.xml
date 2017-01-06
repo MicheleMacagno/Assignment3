@@ -13,6 +13,8 @@
 	
 	<property name="gen.dir" location="${basedir}/gen-src" />
 	<property name="bind.dir" location="${basedir}/gen-bind" />
+	<property name="client1.dir" location="${basedir}/src/it/polito/dp2/NFFG/sol3/client1" />
+	<property name="client2.dir" location="${basedir}/src/it/polito/dp2/NFFG/sol3/client2" />
 	
 	<property name="PORT" value="8080"/>
 	<property name="URLNEO" value="http://localhost:${PORT}/Neo4JXML/rest"/>
@@ -45,6 +47,7 @@
 					<src path="${gen.dir}"/>
 					<src path="${bind.dir}" />
 					<include name="it/polito/dp2/NFFG/sol3/**" />
+			
 					<classpath>
 						<path refid="test.classpath" />
 					</classpath>
@@ -73,5 +76,39 @@
 			<srcfiles dir="${basedir}/xsd" includes="**/*.xsd" />
 		</uptodate>
 	</target>
+	
+	<!-- Target requested by Client1 and Client2 assignment part! -->
+	<target name="build-client">
+		<echo>Compiling client1 - Client2 files</echo>
+		<javac destdir="${build.dir}" debug="${debug}" debuglevel="${debuglevel}" source="${source}" target="${target}" includeantruntime="false">
+							<src path="${client1.dir}" />
+							<src path="${client2.dir}" />
+					
+							<include name="it/polito/dp2/NFFG/sol3/**" />
+							<classpath>
+								<path refid="test.classpath" />
+							</classpath>
+		</javac>
+		<echo>Done.. Complied Client file</echo>
+	</target>
+	
+	<!--	Added by me to speed up main execution -->
+	<target name="run-main" depends="setseed, redeployWS, redeployNeo4JXML,build-client">
+		<echo>Running Main...</echo>
+				<java classname="it.polito.dp2.NFFG.sol3.service.Main" failonerror="true" fork="yes">
+					<sysproperty key="it.polito.dp2.NFFG.NFFGClientFactory" value="${NFFGClientFactory}" />
+					<sysproperty key="it.polito.dp2.NFFG.NffgVerifierFactory" value="${NFFGInfo.NffgVerifierFactory}" />
+					<sysproperty key="it.polito.dp2.NFFG.Random.seed" value="${seed}"/>
+					<sysproperty key="it.polito.dp2.NFFG.Random.testcase" value="${test.case}"/>
+					<sysproperty key="it.polito.dp2.NFFG.lab3.URL" value="${URL}" />
+					<classpath>
+						<path refid="NFFG.classpath" />
+						<pathelement location="${lib.dir}/NFFGRandom.jar"/>
+						<pathelement path="${build.dir}" />
+						<path refid="test.classpath" />
+					</classpath>
+				</java>
+				<echo>Done Main.</echo>
+		</target>
 	
 </project>

@@ -43,14 +43,15 @@ public class Main {
 					
 					while(risultato){
 							
+						System.out.println("Policy"+i);	
 							if((risultato=nc.testReachabilityPolicy("Policy"+i))){
 								System.out.println("Reachable");
 							}
 							else{
 								System.out.println("Not Reachable");
 							}
+							i++;
 						}
-						i++;
 				} catch (UnknownNameException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();

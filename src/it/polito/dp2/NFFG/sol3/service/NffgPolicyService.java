@@ -372,6 +372,13 @@ public class NffgPolicyService {
 			}
 			List<XPolicy> list = returnedXPolicies.getPolicy();
 			xpolicies.getPolicy().forEach(p->{
+				if(p.getVerification()==null){
+					p.setVerification(null);
+				}
+				
+				if(p.getVerification().getVerificationTime()==null){
+					p.setVerification(null);
+				}
 				list.add(addXPolicyVerifyXNffg(p,overwrite));
 			});
 			
@@ -423,6 +430,7 @@ public class NffgPolicyService {
 		}
 		
 		try{
+			
 			String resourceName = nps.baseServiceUrlneo + "/resource/node/"+
 					mapNameNodesNeo.get(xpolicy.getSrc()) + 
 					"/paths?dst="+mapNameNodesNeo.get(xpolicy.getDst());

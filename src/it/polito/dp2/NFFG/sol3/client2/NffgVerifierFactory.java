@@ -7,13 +7,17 @@ public class NffgVerifierFactory extends it.polito.dp2.NFFG.NffgVerifierFactory 
 	@Override
 	public NffgVerifier newNffgVerifier() throws NffgVerifierException {
 		try{
-			NffgVerifierConcrete nvc = new NffgVerifierConcrete();
 //TODO: uncomment it 8081 8080
 //		if(System.getProperty("it.polito.dp2.NFFG.lab3.URL")!=null){
-//			nvc.setBaseServiceURL(System.getProperty("it.polito.dp2.NFFG.lab3.URL"));
+//			NffgVerifierConcrete nvc = new NffgVerifierConcrete(System.getProperty("it.polito.dp2.NFFG.lab3.URL"));
 //		}
-			
+		if(false){ return null;}
+		else{
+//TODO : modify 8081 to 8080
+			NffgVerifierConcrete nvc = new NffgVerifierConcrete("http://localhost:8081/NffgService/rest/");
 			return nvc;
+		}
+			
 		}catch(Throwable e){
 			throw new NffgVerifierException("Error - Unexpected error occurred - Impossible to create the NffgVerifier");
 		}

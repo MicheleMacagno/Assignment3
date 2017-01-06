@@ -227,7 +227,8 @@ public class NFFGTests_lab1 {
     	// call getPolicies on the two implementations
     	Set<PolicyReader> rs = referenceNffgVerifier.getPolicies();
 		Set<PolicyReader> ts = testNffgVerifier.getPolicies();
-		
+		System.out.println("123456789901234567890123456789901234567890123456789901234567890123456789901234567890");
+		System.out.println("rr" + rs.toString() + " ts: " + ts.toString());
 		// check the resulting policy sets are equal
 	    comparePolicySets(rs, ts);
     }
@@ -274,6 +275,9 @@ public class NFFGTests_lab1 {
 	}
 
 	private void compareVerificationResultReader(VerificationResultReader rr, VerificationResultReader tr) {
+	
+		
+		
 		if ((rr == null) && (tr != null) || (rr != null) && (tr == null)) {
 		    fail("verification result is null when it should be non-null or vice versa");
 		    return;

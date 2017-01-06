@@ -240,6 +240,7 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 		xpolicy.setSrc(srcNodeName);
 		xpolicy.setDst(dstNodeName);
 		xpolicy.setPositivity(isPositive);
+		xpolicy.setVerification(null);
 		
 		String resourceName = baseServiceUrl + "/policy";
 		XPolicy response;
