@@ -190,7 +190,7 @@
 		<echo>Done.</echo>
 		
 		<echo>Running First set of Junit tests...</echo>		
-		<junit printsummary="yes" dir="." fork="no" haltonfailure="no" showoutput="yes" filtertrace="true" timeout="120000">
+		<junit printsummary="yes" dir="." fork="yes" haltonfailure="no" showoutput="no" filtertrace="true" timeout="120000">
 			<jvmarg value="-Djava.awt.headless=true" />
 			<sysproperty key="it.polito.dp2.NFFG.NffgVerifierFactory" value="${NFFGInfo.NffgVerifierFactory}" />
 			<sysproperty key="it.polito.dp2.NFFG.Random.seed" value="${seed}"/>
@@ -206,7 +206,7 @@
 		<echo>*** First set of Junit tests: All Tests PASSED  ***</echo>
 		
 		<echo>Running Second set of Junit tests...</echo>		
-		<junit printsummary="yes" dir="." fork="yes" haltonfailure="yes" showoutput="yes" filtertrace="true" timeout="120000">
+		<junit printsummary="yes" dir="." fork="yes" haltonfailure="no" showoutput="no" filtertrace="true" timeout="120000">
 			<jvmarg value="-Djava.awt.headless=true" />
 			<sysproperty key="it.polito.dp2.NFFG.NffgVerifierFactory" value="${NFFGInfo.NffgVerifierFactory}" />
 			<sysproperty key="it.polito.dp2.NFFG.Random.seed" value="${seed}"/>

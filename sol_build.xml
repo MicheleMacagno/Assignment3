@@ -65,7 +65,7 @@
 			<arg value="${bind.dir}" />
 			<arg value="-p" />
 			<arg value="it.polito.dp2.NFFG.sol3.bindings" />
-			<arg value="${basedir}/xsd/nffgInfo.xsd" />
+			<arg value="${basedir}/xsd/nffgVerifier.xsd" />
 		</exec>
 		<touch file="${bind.dir}/.flagfile" />
 	</target>

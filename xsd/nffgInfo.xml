@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <nffgs xmlns:xsd="http://www.w3.org/2001/XMLSchema-instance"
-	xsd:noNamespaceSchemaLocation="nffgInfo.xsd">
+	xsd:noNamespaceSchemaLocation="nffgVerifier.xsd">
 
 
 	<nffg>

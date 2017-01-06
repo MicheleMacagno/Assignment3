@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <policy xmlns:xsd="http://www.w3.org/2001/XMLSchema-instance"
-	xsd:noNamespaceSchemaLocation="nffgInfo.xsd"   nffg="policy1">
+	xsd:noNamespaceSchemaLocation="nffgVerifier.xsd"   nffg="policy1">
 			<name>PolicyTraversal1</name>
 			<positivity>true</positivity>
 			<src>nodos1</src>

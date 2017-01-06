@@ -31,8 +31,7 @@ import it.polito.dp2.NFFG.sol3.client1.ReturnStatus;
 
 public class NffgVerifierConcrete implements NffgVerifier {
 
-//TODO: modify 8081 to 8080
-	private String baseServiceUrl="http://localhost:8081/NffgService/rest/";
+	private String baseServiceUrl="http://localhost:8080/NffgService/rest/";
 	private Client client;
 	private ObjectFactory of;
 	
@@ -228,7 +227,7 @@ public class NffgVerifierConcrete implements NffgVerifier {
 			jaxbMarshaller = jaxbContext.createMarshaller();
 			jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 			//Validation of the schema - from JAXB-unmarshal-validate
-//			jaxbMarshaller.setSchema(sf.newSchema(new File("xsd/nffgInfo.xsd")));
+//			jaxbMarshaller.setSchema(sf.newSchema(new File("xsd/nffgVerifier.xsd")));
 			ObjectFactory objectFactory = new ObjectFactory();
 //		    JAXBElement<XPolicies> je = objectFactory.createPolicies(xpolicies);
 		    		   

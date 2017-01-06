@@ -13,7 +13,7 @@ public class Main {
 		NFFGClient nc = null;
 //		System.setProperty("it.polito.dp2.NFFG.NFFGClientFactory",
 //				"it.polito.dp2.NFFG.sol3.client1.NFFGClientFactory");
-		System.setProperty("it.polito.dp2.NFFG.lab3.URL", "http://localhost:8081/NffgService/rest");
+		System.setProperty("it.polito.dp2.NFFG.lab3.URL", "http://localhost:8081/NffgService/rest/");
 		
 		System.out.println("MAIN IS RUNNING!!!!!!!!!!!!!!!!!!!");
 		NFFGClientFactory ncf = (NFFGClientFactory) NFFGClientFactory.newInstance();

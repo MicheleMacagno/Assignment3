@@ -67,10 +67,15 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 			e.printStackTrace();
 			throw new ServiceException("Error 2 during creation of NffgVerifier");
 		}
-//TODO ENABLE
-//		baseServiceUrl = System.getProperty("it.polito.dp2.NFFG.lab3.URL");
+		
+		baseServiceUrl = System.getProperty("it.polito.dp2.NFFG.lab3.URL");
 		if(baseServiceUrl==null){
-			baseServiceUrl=new String("http://localhost:8081/NffgService/rest");
+			System.out.println("it.polito.dp2.NFFG.lab3.URL is not set, using:");
+			baseServiceUrl=new String("http://localhost:8080/NffgService/rest/");
+		}
+		//make the last symbol of the path a /
+		if(baseServiceUrl.lastIndexOf("/") != baseServiceUrl.length()-1){
+			baseServiceUrl = baseServiceUrl + "/";
 		}
 		System.out.println("Base service URL: " + baseServiceUrl);
 	}
@@ -85,7 +90,7 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 		}
 		XNffg xnffg = this.prepareXNffg(nr);
 		
-		String resourceName = baseServiceUrl + "/nffg";
+		String resourceName = baseServiceUrl + "nffg";
 		try{
 			XNffg response=
 					client.resource(resourceName)
@@ -144,7 +149,7 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 			xnffgs.getNffg().add(xnffg);
 		}
 		
-		String resourceName = baseServiceUrl + "/nffgs";
+		String resourceName = baseServiceUrl + "nffgs";
 		
 		System.out.println(resourceName);
 		//send the set of nffgs without policies
@@ -184,7 +189,7 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 		}
 		
 		//send the set of policies all together
-		resourceName = baseServiceUrl + "/policies";
+		resourceName = baseServiceUrl + "policies";
 		System.out.println(resourceName);
 		XPolicies responseP;
 
@@ -242,7 +247,7 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 		xpolicy.setPositivity(isPositive);
 		xpolicy.setVerification(null);
 		
-		String resourceName = baseServiceUrl + "/policy";
+		String resourceName = baseServiceUrl + "policy";
 		XPolicy response;
 		try{
 			response = client.resource(resourceName)
@@ -277,7 +282,7 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 	 */
 	@Override
 	public void unloadReachabilityPolicy(String name) throws UnknownNameException, ServiceException {
-		String resourceName = baseServiceUrl + "/policy/"+ name;
+		String resourceName = baseServiceUrl + "policy/"+ name;
 		XPolicy response;
 		try{
 			response = client.resource(resourceName)
@@ -306,7 +311,7 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 
 	@Override
 	public boolean testReachabilityPolicy(String name) throws UnknownNameException, ServiceException {
-		String resourceName = baseServiceUrl + "/policy/"+ name;
+		String resourceName = baseServiceUrl + "policy/"+ name;
 		
 		XPolicy response;
 		try{
@@ -368,7 +373,7 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 			jaxbMarshaller = jaxbContext.createMarshaller();
 			jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 			//Validation of the schema - from JAXB-unmarshal-validate
-//			jaxbMarshaller.setSchema(sf.newSchema(new File("xsd/nffgInfo.xsd")));
+//			jaxbMarshaller.setSchema(sf.newSchema(new File("xsd/nffgVerifier.xsd")));
 			ObjectFactory objectFactory = new ObjectFactory();
 //		    JAXBElement<XPolicies> je = objectFactory.createPolicies(xpolicies);
 		    		   

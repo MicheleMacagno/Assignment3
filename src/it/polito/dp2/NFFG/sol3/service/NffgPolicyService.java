@@ -16,6 +16,7 @@ import javax.ws.rs.DefaultValue;
 import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.NotAllowedException;
 import javax.ws.rs.NotFoundException;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -50,9 +51,16 @@ public class NffgPolicyService {
 		baseServiceUrlneo=System.getProperty("it.polito.dp2.NFFG.lab3.NEO4JURL");
 		if(baseServiceUrlneo==null){
 			System.out.println("URL of neo4j - system property is not set");;
-			baseServiceUrlneo="http://localhost:8081/Neo4JXML/rest";
+			baseServiceUrlneo="http://localhost:8080/Neo4JXML/rest/";
 		}
+		
+		//make the last symbol of the path a slash
+		if(baseServiceUrlneo.lastIndexOf("/") != baseServiceUrlneo.length()-1){
+			baseServiceUrlneo = baseServiceUrlneo + "/";
+		}
+		
 		//create a client for each different connection to the system
+		System.out.println(baseServiceUrlneo);
 		client = Client.create();
 	}
 	
@@ -116,7 +124,7 @@ public class NffgPolicyService {
 					Node response=null;
 					//add node in neo4j service
 					try{
-							String resourceName = nps.baseServiceUrlneo + "/resource/node/";
+							String resourceName = nps.baseServiceUrlneo + "resource/node/";
 							response = nps.client.resource(resourceName)
 									.type("application/xml")
 									.accept("application/xml")
@@ -149,16 +157,16 @@ public class NffgPolicyService {
 				nodeNffgProperty.setValue(nffg.getName());
 				nodeNffg.getProperty().add(nodeNffgProperty);
 				
+// PREVIOUS VERSION, LABEL WAS CREATED WHILE CREATING THE NODE				
 				it.polito.dp2.NFFG.sol3.service.Labels lbl = new it.polito.dp2.NFFG.sol3.service.Labels();
 				lbl.value= new LinkedList<String>();
 				lbl.value.add(new String("NFFG"));
 				nodeNffg.setLabels(lbl);
 				
-//				nodeNffg.getLabels().getValue().add(new String("NFFG"));
 				
 				Node response = null;
 				try{
-					String resourceName = nps.baseServiceUrlneo + "/resource/node/";
+					String resourceName = nps.baseServiceUrlneo + "resource/node/";
 					response = nps.client.resource(resourceName)
 							.type("application/xml")
 							.accept("application/xml")
@@ -166,6 +174,20 @@ public class NffgPolicyService {
 					System.out.println("Created node of nffg - Response of server: \n" + response.getId() + response.getProperty().get(0).getValue());
 					//create a mapping between name and id of nodes stored in the neo4j service - special map for nffg
 					mapNameNodesNeoNffg.put(response.getProperty().get(0).getValue(),response.id); 
+					
+					
+////					NEW VERSION - LABEL CREATED WITH AN AD-HOC POST
+//					it.polito.dp2.NFFG.sol3.service.Labels lbl = new it.polito.dp2.NFFG.sol3.service.Labels();
+//					lbl.value= new LinkedList<String>();
+//					lbl.value.add(new String("NFFG"));
+////					nodeNffg.setLabels(lbl);
+//					resourceName = nps.baseServiceUrlneo + "resource/node/"+response.id+"/label";
+//					nps.client.resource(resourceName)
+//							.type(MediaType.APPLICATION_XML)
+//							.accept(MediaType.TEXT_PLAIN)
+//							.entity(lbl)
+//							.post();
+					
 					
 			}catch(Exception e){
 				System.out.println("Something was wrong while contacting neo4j to create the nffg node");
@@ -191,7 +213,7 @@ public class NffgPolicyService {
 						//This name is set by Assignment2.pdf
 						relationship.setType("Link");
 						
-						String requestString = nps.baseServiceUrlneo + "/resource/node/" + srcId +"/relationship";
+						String requestString = nps.baseServiceUrlneo + "resource/node/" + srcId +"/relationship";
 						try{
 							Relationship returnedRelationship =
 									nps.client.resource(requestString)
@@ -231,7 +253,7 @@ public class NffgPolicyService {
 						//This name is set by Assignment2.pdf
 						relationship.setType("belongs");
 						
-						String requestString = nps.baseServiceUrlneo + "/resource/node/" + srcId +"/relationship";
+						String requestString = nps.baseServiceUrlneo + "resource/node/" + srcId +"/relationship";
 						try{
 							Relationship returnedRelationship =
 									nps.client.resource(requestString)
@@ -431,7 +453,7 @@ public class NffgPolicyService {
 		
 		try{
 			
-			String resourceName = nps.baseServiceUrlneo + "/resource/node/"+
+			String resourceName = nps.baseServiceUrlneo + "resource/node/"+
 					mapNameNodesNeo.get(xpolicy.getSrc()) + 
 					"/paths?dst="+mapNameNodesNeo.get(xpolicy.getDst());
 			
