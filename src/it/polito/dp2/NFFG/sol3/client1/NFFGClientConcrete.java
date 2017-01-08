@@ -1,7 +1,6 @@
 package it.polito.dp2.NFFG.sol3.client1;
 
 import it.polito.dp2.NFFG.lab3.AlreadyLoadedException;
-import it.polito.dp2.NFFG.lab3.NFFGClient;
 import it.polito.dp2.NFFG.lab3.ServiceException;
 import it.polito.dp2.NFFG.lab3.UnknownNameException;
 import it.polito.dp2.NFFG.sol3.bindings.XLinks;
@@ -17,23 +16,18 @@ import it.polito.dp2.NFFG.sol3.bindings.XTraversal;
 import it.polito.dp2.NFFG.sol3.bindings.XVerification;
 import it.polito.dp2.NFFG.sol3.bindings.XNode;
 import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.UniformInterfaceException;
 
 import java.io.File;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.ws.rs.ForbiddenException;
-import javax.ws.rs.NotAllowedException;
-import javax.ws.rs.NotFoundException;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -43,7 +37,6 @@ import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.validation.SchemaFactory;
 
-import org.xml.sax.SAXException;
 
 import it.polito.dp2.NFFG.*;
 
@@ -106,15 +99,16 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 			switch(e.getResponse().getStatus()){
 			case ReturnStatus.FORBIDDEN:
 				throw new AlreadyLoadedException(ReturnStatus.FORBIDDEN +" - Error - Nffg already existing! Impossible to create it!");
-			
+			case ReturnStatus.INTERNAL_SERVER_ERROR:
+				throw new  ServiceException(e.getResponse().getStatus()+" - Error " +e.getMessage());
 			default:
 				throw new ServiceException(e.getResponse().getStatus()+" Error - Unexpected exception, impossble to create the nffg");
 			}
 		
-		}catch(ForbiddenException fe){
-			System.out.println("Nffg already existing! Impossible to create it!");
-			fe.printStackTrace();
-			throw new AlreadyLoadedException("Error - Nffg already existing! Impossible to create it!");
+		}
+		catch(ClientHandlerException e){
+			System.out.println("Error 500 - Internal server error\n" + e.getMessage());
+			throw new ServiceException("Error 500 - Internal server error\n");
 		}
 		catch(Exception e){
 			e.printStackTrace();
@@ -167,10 +161,15 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 			case ReturnStatus.FORBIDDEN:
 				throw new AlreadyLoadedException(ReturnStatus.FORBIDDEN +" - Error - Nffgs At least one nffg is already existing in the server!");
 			
+			case ReturnStatus.INTERNAL_SERVER_ERROR:
+				throw new  ServiceException(e.getResponse().getStatus()+" - Error " +e.getMessage());
+				
 			default:
 				throw new ServiceException(e.getResponse().getStatus()+" Error - Nffgs reported an unexpected error while adding them.");
 			}
-			
+		}catch(ClientHandlerException e){
+			System.out.println("Error 500 - Internal server error\n" + e.getMessage());
+			throw new ServiceException("Error 500 - Internal server error\n");
 		}catch(Exception e){
 			e.printStackTrace();
 			System.out.println(e.getMessage());
@@ -185,6 +184,7 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 				xpolicies.getPolicy().add(xpolicy);
 			}catch(Exception e){
 				e.printStackTrace();
+				throw new ServiceException("-- Error in accessing informations about locally stored policies");
 			}
 		}
 		
@@ -225,10 +225,15 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 			case ReturnStatus.NOT_ALLOWED:
 				throw new ServiceException(ReturnStatus.NOT_ALLOWED +" Error - Wrong query url! Use ?overwrite=y");
 			
+			case ReturnStatus.INTERNAL_SERVER_ERROR:
+				throw new  ServiceException(e.getResponse().getStatus()+" - Error " +e.getMessage());
+			
 			default:
 				throw new ServiceException(e.getResponse().getStatus()+" Error - Policy unexpected error during deletion of the policy");
 			}
-			
+		}catch(ClientHandlerException e){
+			System.out.println("Error 500 - Internal server error\n" + e.getMessage());
+			throw new ServiceException("Error 500 - Internal server error\n");
 		}catch(Exception e){
 			e.printStackTrace();
 			System.out.println(e.getMessage());
@@ -260,13 +265,26 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 			System.out.println(e.getResponse().getEntity(String.class));
 			System.out.println(e.getMessage());
 
-			if((e.getResponse().getStatus()==ReturnStatus.NOT_FOUND)){
+			
+			switch(e.getResponse().getStatus()){
+			case ReturnStatus.NOT_FOUND:
 				System.out.println(e.getResponse().getEntity(String.class));
 				throw new UnknownNameException(ReturnStatus.NOT_FOUND+ " - Error - Nffg referring to the policy is not existing");
+			case ReturnStatus.FORBIDDEN:
+				//this case can't occur in this program, because the client is set up in order to always overwrite existing policies.
+				//It is added to respect the description of web service I created for assignment1.
+				System.out.println(e.getResponse().getEntity(String.class));
+				throw new ServiceException(e.getResponse().getEntity(String.class));
+			
+			case ReturnStatus.INTERNAL_SERVER_ERROR:
+				throw new  ServiceException(e.getResponse().getStatus()+" - Error " +e.getMessage());
+			default:
+				throw new ServiceException("Error - Policy unexpected error during deletion of the policy");
 			}
-			throw new ServiceException("Error - Policy unexpected error during deletion of the policy");
-		}
-		catch(Exception e){
+		}catch(ClientHandlerException e){
+			System.out.println("Error 500 - Internal server error\n" + e.getMessage());
+			throw new ServiceException("Error 500 - Internal server error\n");
+		}catch(Exception e){
 			e.printStackTrace();
 			System.out.println(e.getMessage());
 			throw new ServiceException("Error - Policy Unexpected error while creating the set of policies");
@@ -295,13 +313,19 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 			System.out.println(e.getResponse().getEntity(String.class));
 			System.out.println(e.getMessage());
 
-			if((e.getResponse().getStatus()==ReturnStatus.NOT_FOUND)){
+			switch(e.getResponse().getStatus()){
+			case ReturnStatus.NOT_FOUND:
 				System.out.println(e.getResponse().getEntity(String.class));
 				throw new UnknownNameException(ReturnStatus.NOT_FOUND + " Error - The policy you want to delete is not existing");
+			case ReturnStatus.INTERNAL_SERVER_ERROR:
+				throw new  ServiceException(e.getResponse().getStatus()+" - Error " +e.getMessage());
+			default:
+				throw new ServiceException("--Error - Policy unexpected error during deletion of the policy");
 			}
-			throw new ServiceException("--Error - Policy unexpected error during deletion of the policy");
-		}
-		catch(Exception e){
+		}catch(ClientHandlerException e){
+			System.out.println("Error 500 - Internal server error\n" + e.getMessage());
+			throw new ServiceException("Error 500 - Internal server error\n");
+		}catch(Exception e){
 			e.printStackTrace();
 			System.out.println(e.getMessage());
 			throw new ServiceException("--Error - Policy unexpected error during deletion of the policy");
@@ -323,12 +347,18 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 			System.out.println(e.getResponse().getEntity(String.class));
 			System.out.println(e.getMessage());
 
-			if((e.getResponse().getStatus()==ReturnStatus.NOT_FOUND)){
+			switch(e.getResponse().getStatus()){
+			case ReturnStatus.NOT_FOUND:
 				System.out.println(e.getResponse().getEntity(String.class));
 				throw new UnknownNameException(ReturnStatus.NOT_FOUND + " Error - The policy you want to verify is not existing");
-			}
+			case ReturnStatus.INTERNAL_SERVER_ERROR:
+				throw new  ServiceException(e.getResponse().getStatus()+" - Error " +e.getMessage());
+			default:			
 			throw new ServiceException(e.getResponse().getStatus()+ "--Error - Policy unexpected error verification of the policy");
-		
+			}
+		}catch(ClientHandlerException e){
+			System.out.println("Error 500 - Internal server error\n" + e.getMessage());
+			throw new ServiceException("Error 500 - Internal server error\n");
 		}catch(Exception e){
 			e.printStackTrace();
 			System.out.println(e.getMessage());
@@ -349,7 +379,6 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 		
 		GregorianCalendar c = new GregorianCalendar();
 		c.setTime(calendarDate);
-//TODO ENABLE
 		c.setTimeZone(cal.getTimeZone());
 		XMLGregorianCalendar date2 = null;
 		try {

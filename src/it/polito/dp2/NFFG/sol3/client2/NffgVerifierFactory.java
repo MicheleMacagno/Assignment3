@@ -27,5 +27,9 @@ public class NffgVerifierFactory extends it.polito.dp2.NFFG.NffgVerifierFactory 
 			throw new NffgVerifierException("Error - Unexpected error occurred - Impossible to create the NffgVerifier");
 		}
 	}
+	
+	public static NffgVerifierFactory newInstance(){
+		return new it.polito.dp2.NFFG.sol3.client2.NffgVerifierFactory();
+	}
 
 }

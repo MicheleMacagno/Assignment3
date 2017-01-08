@@ -1,7 +1,5 @@
 package it.polito.dp2.NFFG.sol3.service;
 
-import java.io.File;
-import java.io.StringReader;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -9,31 +7,18 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.ForbiddenException;
-import javax.ws.rs.NotAllowedException;
+import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
-import javax.xml.validation.SchemaFactory;
-import javax.xml.ws.WebServiceException;
 
 import com.sun.jersey.api.client.Client;
 
-import it.polito.dp2.NFFG.LinkReader;
-import it.polito.dp2.NFFG.NffgVerifierException;
-import it.polito.dp2.NFFG.NodeReader;
-import it.polito.dp2.NFFG.lab2.ServiceException;
 import it.polito.dp2.NFFG.sol3.bindings.*;
 
 //TODO: verify the set schema, is it correct? - it always throws exceptions
@@ -70,8 +55,7 @@ public class NffgPolicyService {
 		}
 		else{
 			System.out.println("Nffg not found in the database");
-			throw new NotFoundException("msg Nffg not found in the database",Response.status(404).entity("Nffg not found in the database").build());
-//			return null;
+			throw new NotFoundException("Nffg not found in the database",Response.status(404).entity("Nffg not found in the database").build());
 		}
 	}
 	
@@ -126,8 +110,8 @@ public class NffgPolicyService {
 					try{
 							String resourceName = nps.baseServiceUrlneo + "resource/node/";
 							response = nps.client.resource(resourceName)
-									.type("application/xml")
-									.accept("application/xml")
+									.type(MediaType.APPLICATION_XML)
+									.accept(MediaType.APPLICATION_XML)
 									.post(Node.class,node);
 							System.out.println("Response of server: \t" + response.getId() + response.getProperty().get(0).getValue());
 							//create a mapping between name and id of nodes stored in the neo4j service
@@ -142,8 +126,8 @@ public class NffgPolicyService {
 						//TODO verify it
 						
 						//TODO: manage deletion of the node from the map
-						throw new NotFoundException("Something was wrong while contacting neo4j to insert a node",
-								Response.status(404).entity("Something was wrong while contacting neo4j to insert a node").build());
+						throw new InternalServerErrorException("Something was wrong while contacting neo4j to insert a node",
+								Response.status(500).entity("Something was wrong while contacting neo4j to insert a node").build());
 					}
 				}
 				
@@ -158,131 +142,125 @@ public class NffgPolicyService {
 				nodeNffg.getProperty().add(nodeNffgProperty);
 				
 // PREVIOUS VERSION, LABEL WAS CREATED WHILE CREATING THE NODE				
-				it.polito.dp2.NFFG.sol3.service.Labels lbl = new it.polito.dp2.NFFG.sol3.service.Labels();
-				lbl.value= new LinkedList<String>();
-				lbl.value.add(new String("NFFG"));
-				nodeNffg.setLabels(lbl);
+//				it.polito.dp2.NFFG.sol3.service.Labels lbl = new it.polito.dp2.NFFG.sol3.service.Labels();
+//				lbl.value= new LinkedList<String>();
+//				lbl.value.add(new String("NFFG"));
+//				nodeNffg.setLabels(lbl);
 				
 				
 				Node response = null;
 				try{
 					String resourceName = nps.baseServiceUrlneo + "resource/node/";
 					response = nps.client.resource(resourceName)
-							.type("application/xml")
-							.accept("application/xml")
+							.type(MediaType.APPLICATION_XML)
+							.accept(MediaType.APPLICATION_XML)
 							.post(Node.class,nodeNffg);
 					System.out.println("Created node of nffg - Response of server: \n" + response.getId() + response.getProperty().get(0).getValue());
 					//create a mapping between name and id of nodes stored in the neo4j service - special map for nffg
+//					mapNameNodesNeoNffg.put(response.getProperty().get(0).getValue(),response.id); 
+					
+					
+////				NEW VERSION - LABEL CREATED WITH AN AD-HOC POST
+					Labels lbl = new Labels();
+					lbl.value= new LinkedList<String>();
+					lbl.value.add(new String("NFFG"));
+					resourceName = nps.baseServiceUrlneo + "resource/node/"+response.id+"/label";
+					nps.client.resource(resourceName)
+							.type(MediaType.APPLICATION_XML)
+							.entity(lbl)
+							.post();
+					
+					//new version with label post - moved here - 
 					mapNameNodesNeoNffg.put(response.getProperty().get(0).getValue(),response.id); 
+			
+				}catch(Exception e){
+					System.out.println("Something was wrong while contacting neo4j to create the nffg node");
+					e.printStackTrace();
+					//TODO verify it
 					
-					
-////					NEW VERSION - LABEL CREATED WITH AN AD-HOC POST
-//					it.polito.dp2.NFFG.sol3.service.Labels lbl = new it.polito.dp2.NFFG.sol3.service.Labels();
-//					lbl.value= new LinkedList<String>();
-//					lbl.value.add(new String("NFFG"));
-////					nodeNffg.setLabels(lbl);
-//					resourceName = nps.baseServiceUrlneo + "resource/node/"+response.id+"/label";
-//					nps.client.resource(resourceName)
-//							.type(MediaType.APPLICATION_XML)
-//							.accept(MediaType.TEXT_PLAIN)
-//							.entity(lbl)
-//							.post();
-					
-					
-			}catch(Exception e){
-				System.out.println("Something was wrong while contacting neo4j to create the nffg node");
-				e.printStackTrace();
-				//TODO verify it
-				
-				//TODO: manage deletion of the node from the map
-				throw new NotFoundException("Something was wrong while contacting neo4j to create the nffg node",
-						Response.status(404).entity("Something was wrong while contacting neo4j to create the nffg node").build());
-			}
+					//TODO: manage deletion of the node from the map
+					throw new InternalServerErrorException("Something was wrong while contacting neo4j to create the nffg node",
+							Response.status(500).entity("Something was wrong while contacting neo4j to create the nffg node").build());
+				}
 
 				
-		//RELATIONSHIPS - LINKS
-					for(XLink l : nffg.getLinks().getLink()){
-						String srcId = mapNameNodesNeo.get(l.getSrc());
-						String dstId = mapNameNodesNeo.get(l.getDst());
-					
-						//prepare relationship for POST
-						Relationship relationship = new Relationship();
-						relationship.setDstNode(dstId);
-						relationship.setSrcNode(srcId);
-						
-						//This name is set by Assignment2.pdf
-						relationship.setType("Link");
-						
-						String requestString = nps.baseServiceUrlneo + "resource/node/" + srcId +"/relationship";
-						try{
-							Relationship returnedRelationship =
-									nps.client.resource(requestString)
-									.accept("application/xml")
-									.type("application/xml")
-									.post(Relationship.class,relationship);
-							
-							System.out.println("Returned Relationship: " + returnedRelationship.getId() + " " + returnedRelationship.getSrcNode() + " " + returnedRelationship.getDstNode() + " " + returnedRelationship.getType());
-						}catch(Exception e){
-							System.out.println("Error in creating the relationship");
-							e.printStackTrace();
-							System.out.println("Something was wrong while contacting neo4j to create relationship");
-							e.printStackTrace();
-							//TODO verify it
-							
-							//TODO: manage deletion of the node from the map
-							throw new NotFoundException("Something was wrong while contacting neo4j  to create relationship",
-									Response.status(404).entity("Something was wrong while contacting neo4j  to create relationship").build());
-						}
-						
-					}
+				//RELATIONSHIPS - LINKS
+				for(XLink l : nffg.getLinks().getLink()){
+					String srcId = mapNameNodesNeo.get(l.getSrc());
+					String dstId = mapNameNodesNeo.get(l.getDst());
 				
+					//prepare relationship for POST
+					Relationship relationship = new Relationship();
+					relationship.setDstNode(dstId);
+					relationship.setSrcNode(srcId);
 					
-		//RELATIONSHIPS of NFFG node to define connection to Nffg Node
-					for(Node n : listNode){
-						String srcId = mapNameNodesNeoNffg.get(nffg.getName());
-						System.out.println("NDFFG ID: " + srcId + nffg.getName() );
-						String dstId = n.getId();
-						System.out.println("Node ID: " + dstId + n.getProperty().get(0).getValue() );
-						
+					//This name is set by Assignment2.pdf
+					relationship.setType("Link");
 					
-						//prepare relationship for POST
-						Relationship relationship = new Relationship();
-						relationship.setDstNode(dstId);
-						relationship.setSrcNode(srcId);
+					String requestString = nps.baseServiceUrlneo + "resource/node/" + srcId +"/relationship";
+					try{
+						Relationship returnedRelationship =
+								nps.client.resource(requestString)
+								.accept(MediaType.APPLICATION_XML)
+								.type(MediaType.APPLICATION_XML)
+								.post(Relationship.class,relationship);
 						
-						//This name is set by Assignment2.pdf
-						relationship.setType("belongs");
+						System.out.println("Returned Relationship: " + returnedRelationship.getId() + " " + returnedRelationship.getSrcNode() + " " + returnedRelationship.getDstNode() + " " + returnedRelationship.getType());
+					}catch(Exception e){
+						System.out.println("Error in creating the relationship");
+						System.out.println("Something was wrong while contacting neo4j to create relationship");
+						e.printStackTrace();
 						
-						String requestString = nps.baseServiceUrlneo + "resource/node/" + srcId +"/relationship";
-						try{
-							Relationship returnedRelationship =
-									nps.client.resource(requestString)
-									.accept("application/xml")
-									.type("application/xml")
-									.post(Relationship.class,relationship);
-							
-							System.out.println("Created link of nffg - Returned Relationship: " + returnedRelationship.getId() + " " + returnedRelationship.getSrcNode() + " " + returnedRelationship.getDstNode() + " " + returnedRelationship.getType());
-						}catch(Exception e){
-							System.out.println("Error in creating the relationship");
-							e.printStackTrace();
-							System.out.println("Something was wrong while contacting neo4j to create relationship for the nffg");
-							e.printStackTrace();
-							//TODO verify it
-							
-							//TODO: manage deletion of the node from the map
-							throw new NotFoundException("Something was wrong while contacting neo4j  to create relationship for the nffg",
-									Response.status(404).entity("Something was wrong while contacting neo4j  to create relationship for the nffg").build());
-						}
+						//TODO: manage deletion of the node from the map
+						throw new InternalServerErrorException("Something was wrong while contacting neo4j  to create relationship",
+								Response.status(500).entity("Something was wrong while contacting neo4j  to create relationship").build());
 					}
 					
-				mapXNffg.put(nffg.getName(), nffg);
-				System.out.println("Nffg corretly inserted in the map");
-				return nffg;
-			}
-			else{
-				System.out.println("Error - Nffg name already existing");
-				throw new ForbiddenException("Error - Nffg name already existing",Response.status(403).entity("Error - Nffg name already existing").build());
-			}
+				}
+			
+				
+				//RELATIONSHIPS of NFFG node to define connection to Nffg Node
+				for(Node n : listNode){
+					String srcId = mapNameNodesNeoNffg.get(nffg.getName());
+					System.out.println("NDFFG ID: " + srcId + nffg.getName() );
+					String dstId = n.getId();
+					System.out.println("Node ID: " + dstId + n.getProperty().get(0).getValue() );
+					
+				
+					//prepare relationship for POST
+					Relationship relationship = new Relationship();
+					relationship.setDstNode(dstId);
+					relationship.setSrcNode(srcId);
+					
+					//This name is set by Assignment2.pdf
+					relationship.setType("belongs");
+					
+					String requestString = nps.baseServiceUrlneo + "resource/node/" + srcId +"/relationship";
+					try{
+						Relationship returnedRelationship =
+								nps.client.resource(requestString)
+								.accept(MediaType.APPLICATION_XML)
+								.type(MediaType.APPLICATION_XML)
+								.post(Relationship.class,relationship);
+						
+						System.out.println("Created link of nffg - Returned Relationship: " + returnedRelationship.getId() + " " + returnedRelationship.getSrcNode() + " " + returnedRelationship.getDstNode() + " " + returnedRelationship.getType());
+					}catch(Exception e){
+						System.out.println("Error in creating the relationship");
+						System.out.println("Something was wrong while contacting neo4j to create relationship for the nffg");
+						e.printStackTrace();
+						throw new InternalServerErrorException("Something was wrong while contacting neo4j  to create relationship for the nffg",
+								Response.status(500).entity("Something was wrong while contacting neo4j  to create relationship for the nffg").build());
+					}
+				}
+				
+			mapXNffg.put(nffg.getName(), nffg);
+			System.out.println("Nffg corretly inserted in the map");
+			return nffg;
+		}
+		else{
+			System.out.println("Error - Nffg name already existing - Please submit a Nffg with a different name ");
+			throw new ForbiddenException("Error - Nffg name already existing - Please submit a Nffg with a different name ",Response.status(403).entity("Error - Nffg name already existing").build());
+		}
 	}
 	
 	/**
@@ -336,7 +314,7 @@ public class NffgPolicyService {
 					}
 					else{
 						System.out.println("Error - Policy already existing");
-						throw new ForbiddenException("Error - Policy already existing",Response.status(403).entity("Error - Policy already existing").build());
+						throw new ForbiddenException("Error - Policy already existing. Cannot overwrite it",Response.status(403).entity("Error - Policy already existing. Cannot overwrite it").build());
 						
 					}
 				}
@@ -394,11 +372,12 @@ public class NffgPolicyService {
 			}
 			List<XPolicy> list = returnedXPolicies.getPolicy();
 			xpolicies.getPolicy().forEach(p->{
+				//sometimes the verification can be totally empty
 				if(p.getVerification()==null){
 					p.setVerification(null);
 				}
-				
-				if(p.getVerification().getVerificationTime()==null){
+				//if it is not specified the verification time it means the policy was not verified.
+				else if(p.getVerification().getVerificationTime()==null){
 					p.setVerification(null);
 				}
 				list.add(addXPolicyVerifyXNffg(p,overwrite));
@@ -461,8 +440,8 @@ public class NffgPolicyService {
 			System.out.println(resourceName);
 			
 			Paths paths = nps.client.resource(resourceName)
-					.type("application/xml")
-					.accept("application/xml")
+					.type(MediaType.APPLICATION_XML)
+					.accept(MediaType.APPLICATION_XML)
 					.get(Paths.class);
 		
 			System.out.println("Found n paths: " + paths.getPath().size());
@@ -514,129 +493,3 @@ public class NffgPolicyService {
 	}
 	
 }
-
-
-
-//public static synchronized void deleteAllXNffgs(){
-//mapXNffg.clear();
-////when removing an nffg also the relative policies are removed
-//deleteAllPolicies();
-//}
-
-//public static synchronized XNffg deleteNffgByName(String name,String delete_policy) throws NotFoundException,ForbiddenException{
-//
-//NffgPolicyService nps = new NffgPolicyService();
-////delete from neo4j
-//
-//if(!mapXNffg.containsKey(name)){
-//	throw new NotFoundException(Response.status(404).entity("The requested Nffg does not exists! Impossible to remove it").build());
-//}
-//
-//XNffg xnffg = mapXNffg.get(name);
-//
-//
-//if(delete_policy.equals("y")){
-//		
-////		deleteFromNeo4J(xnffg,nps);
-//	
-//		mapXNffg.remove(name);
-//		
-//		
-//		//delete related Policy of the given nffg
-//		mapXPolicy.values().stream().filter(p->{
-//			if(p.getNffg().equals(xnffg.getName())){
-//				return true;
-//			}
-//			else{
-//				return false;
-//			}
-//		}).forEach(p->{
-//			mapXPolicy.remove(p.getName());
-//		});
-//		
-//		
-//		return xnffg;
-//	
-//}else if(delete_policy.equals("n")){
-//	int size = 
-//		mapXPolicy.values().stream().filter(p->{
-//			if(p.getNffg().equals(xnffg.getName())){
-//				return true;
-//			}
-//			else{
-//				return false;
-//			}
-//		}).collect(Collectors.toList()).size();
-//	
-//	//no policies, I can remove the nffg
-//	if(size==0){
-//		
-////		deleteFromNeo4J(xnffg,nps);
-//		
-//		mapXNffg.remove(name);
-//		return xnffg;
-//	}
-//	else{
-//		throw new ForbiddenException("Impossible to delete the nffg - at least one policy referring to it exists",Response.status(403).entity("Impossible to delete the nffg - at least one policy referring to it exists").build());
-//	}
-//}
-//else{
-//	throw new ForbiddenException("You must specify either y/n for delpolicy parameter",
-//			Response.status(403).entity("You must specify either y/n for delpolicy parameter").build());
-//}
-//}
-
-//private static synchronized void deleteFromNeo4J(XNffg xnffg,NffgPolicyService nps) throws NotFoundException{
-//
-//for(XNode x : xnffg.getNodes().getNode()){
-//	try{
-//		String resourceName = nps.baseServiceUrlneo + "/resource/node/" + mapNameNodesNeo.get(x.getName());
-//		Response response = nps.client.resource(resourceName)
-//				.type("text/plain")
-//				.accept("application/xml")
-//				.delete(Response.class);
-//		
-//		if(response.getStatus()>=400){
-//			throw new Exception("Error in deleting the node");
-//		}
-//		System.out.println("Response of server: \t");
-//		//create a mapping between name and id of nodes stored in the neo4j service
-//		System.out.println("Node deleted: " + response.getEntity().toString());
-//		mapNameNodesNeo.remove(x.getName()); 
-//	}catch(Exception e){
-//		System.out.println("Something was wrong while deleting a noe from neo4j");
-//		e.printStackTrace();
-//		//TODO verify it
-//		
-//		//TODO: manage deletion of the node from the map
-//		throw new NotFoundException("Something was wrong while contacting neo4j to insert a node",
-//				Response.status(404).entity("Something was wrong while contacting neo4j to insert a node").build());
-//	}
-//}
-////TODO - remove this unuseful redundancy		
-////delete the node of the nffg
-//try{
-//	String resourceName = nps.baseServiceUrlneo + "/resource/node/" + mapNameNodesNeoNffg.get(xnffg.getName());
-//	Response response = nps.client.resource(resourceName)
-//			.type("text/plain")
-//			.accept("application/xml")
-//			.delete(Response.class);
-//	
-//	if(response.getStatus()>=400){
-//		throw new Exception("Error in deleting the node");
-//	}
-//	System.out.println("Response of server: \t");
-//	//create a mapping between name and id of nodes stored in the neo4j service
-//	System.out.println("Node deleted: " + response.getEntity().toString());
-//	mapNameNodesNeoNffg.remove(xnffg.getName()); 
-//}catch(Exception e){
-//	System.out.println("Something was wrong while deleting a noe from neo4j");
-//	e.printStackTrace();
-//	//TODO verify it
-//	
-//	//TODO: manage deletion of the node from the map
-//	throw new NotFoundException("Something was wrong while contacting neo4j to insert a node",
-//			Response.status(404).entity("Something was wrong while contacting neo4j to insert a node").build());
-//}
-//
-//}

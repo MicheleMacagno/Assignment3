@@ -21,10 +21,7 @@ import it.polito.dp2.NFFG.NffgVerifier;
 import it.polito.dp2.NFFG.NffgVerifierException;
 import it.polito.dp2.NFFG.NodeReader;
 import it.polito.dp2.NFFG.PolicyReader;
-import it.polito.dp2.NFFG.lab3.AlreadyLoadedException;
-import it.polito.dp2.NFFG.lab3.ServiceException;
 import it.polito.dp2.NFFG.sol3.bindings.ObjectFactory;
-import it.polito.dp2.NFFG.sol3.bindings.XNffg;
 import it.polito.dp2.NFFG.sol3.bindings.XNffgs;
 import it.polito.dp2.NFFG.sol3.bindings.XPolicies;
 import it.polito.dp2.NFFG.sol3.client1.ReturnStatus;
@@ -59,10 +56,17 @@ public class NffgVerifierConcrete implements NffgVerifier {
 				
 				//DEBUG
 //				this.printXML(null,of.createNffgs(xnffgs));
+			}catch(UniformInterfaceException e){
+				if(e.getResponse().getStatus()==ReturnStatus.NOT_FOUND){
+					System.out.println("404 Error - Probably the service is not available!!");
+//					e.printStackTrace();
+				}
+				throw new NffgVerifierException(e);
 			}catch(Exception e){
+				System.out.println("404 Error - Probably the service is not available!!");
 				System.out.println("Error - Unexcpected error while trying to retrieve the set of nffgs contacting the web service");
-				e.printStackTrace();
-				throw e;
+//				e.printStackTrace();
+				throw new NffgVerifierException(e);
 			}
 			
 			//get all policies from web service
@@ -80,7 +84,7 @@ public class NffgVerifierConcrete implements NffgVerifier {
 			}catch(Exception e){
 				System.out.println("Error - Unexcpected error while trying to retrieve the set of policies contacting the web service");
 				e.printStackTrace();
-				throw e;
+				throw new NffgVerifierException(e);
 			}
 			
 			
@@ -228,7 +232,7 @@ public class NffgVerifierConcrete implements NffgVerifier {
 			jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 			//Validation of the schema - from JAXB-unmarshal-validate
 //			jaxbMarshaller.setSchema(sf.newSchema(new File("xsd/nffgVerifier.xsd")));
-			ObjectFactory objectFactory = new ObjectFactory();
+//			ObjectFactory objectFactory = new ObjectFactory();
 //		    JAXBElement<XPolicies> je = objectFactory.createPolicies(xpolicies);
 		    		   
 //		     AddressType shipping = je.getValue();

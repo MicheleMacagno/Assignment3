@@ -1,16 +1,14 @@
 package it.polito.dp2.NFFG.sol3.service;
 import java.net.URI;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 
 import javax.inject.Singleton;
-import javax.jws.WebService;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.GET;
+import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.NotAllowedException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.POST;
@@ -22,14 +20,10 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
-import javax.xml.bind.JAXBElement;
-import javax.xml.ws.WebServiceException;
 
 import com.wordnik.swagger.annotations.ApiOperation;
 
-import it.polito.dp2.NFFG.lab3.AlreadyLoadedException;
 import it.polito.dp2.NFFG.sol3.bindings.XNffg;
 import it.polito.dp2.NFFG.sol3.bindings.XNffgs;
 import it.polito.dp2.NFFG.sol3.bindings.XPolicies;
@@ -48,20 +42,6 @@ public class NffgPolicyWS {
 		
 	}
 	
-//my working version with xml translation
-	
-//	@POST
-//	@Path("nffg")
-//	@ApiOperation(	value = "Create a new Nffg", notes = "xml format required")
-//	@Produces(MediaType.APPLICATION_XML)
-//	@Consumes(MediaType.APPLICATION_XML)
-//	public Response storeNewNffgByName(@PathParam("name") String name, String xmlDocument){
-//		NffgPolicyService nps = new NffgPolicyService();
-//		Response nffgResponse = nps.unmarshalNffg(xmlDocument);
-//		return nffgResponse;
-//	}
-	
-	
 	/**
 	 * 
 	 * @param xnffg
@@ -72,20 +52,16 @@ public class NffgPolicyWS {
 	@ApiOperation(	value = "Create a new Nffg", notes = "xml format required")
 	@Produces(MediaType.APPLICATION_XML)
 	@Consumes(MediaType.APPLICATION_XML)
-	public Response storeNewNffgByName(@Context UriInfo uriInfo, XNffg xnffg) throws ForbiddenException {
+	public Response storeNewNffgByName(@Context UriInfo uriInfo, XNffg xnffg) throws ForbiddenException, InternalServerErrorException {
 		
 		XNffg rxnffg = NffgPolicyService.addXNffg(xnffg);
-		if(rxnffg != null){
-			URI uri = uriInfo.getAbsolutePathBuilder().path(rxnffg.getName()).build();
-			return Response.created(uri).entity(of.createNffg(rxnffg)).build();
-		}
-		else{
-			return Response.status(404).entity("Impossible to create the object. Verify the name of nffg is not already existing").build();
-		}
+		URI uri = uriInfo.getAbsolutePathBuilder().path(rxnffg.getName()).build();
+		return Response.created(uri).entity(of.createNffg(rxnffg)).build();
   	}
 	
 	@GET
 	@Path("/nffg/{name: [a-zA-Z_][a-zA-Z0-9_]*}")
+	@ApiOperation( value = "Retrieve an Nffg given its name", notes="returns xml format")
 	@Produces(MediaType.APPLICATION_XML)
 	public Response getNffgByName(@PathParam("name") String name) throws NotFoundException{
 		
@@ -108,17 +84,6 @@ public class NffgPolicyWS {
 			return Response.status(404).entity("Impossible to create the object. Verify the name of nffg is not already existing").build();
 		}
   	}
-	
-//	@POST
-//	@Path("nffgs")
-//	@ApiOperation(	value = "Create new nffgs", notes = "xml format required")
-//	@Produces(MediaType.APPLICATION_XML)
-//	@Consumes(MediaType.APPLICATION_XML)
-//	public XNffgs storeNffgsByName(XNffgs xnffgs) throws ForbiddenException {
-//		
-//		XNffgs rxnffgs = NffgPolicyService.addXNffgs(xnffgs);
-//		return rxnffgs;
-//  	}
 	
 	@GET
 	@Path("/nffgs")
@@ -168,7 +133,8 @@ public class NffgPolicyWS {
 		else if(overwrite.equals("n")){
 			rxpolicy = NffgPolicyService.addXPolicyVerifyXNffg(xpolicy,false);
 		}else{
-			throw new NotFoundException("overwrite must be y or n",Response.status(404).entity("overwrite must be y or n").build());
+			throw new ForbiddenException("Parameter overwrite can be y or n, or can be avoided. No other values are accepted.",
+					Response.status(403).entity("Parameter overwrite can be y or n, or can be avoided. No other values are accepted.").build());
 		}
 		URI uri = uriInfo.getAbsolutePathBuilder().path(rxpolicy.getName()).build();
 		return Response.created(uri).entity(of.createPolicy(rxpolicy)).build();
