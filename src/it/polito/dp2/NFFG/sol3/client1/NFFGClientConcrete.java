@@ -15,9 +15,7 @@ import it.polito.dp2.NFFG.sol3.bindings.XPolicy;
 import it.polito.dp2.NFFG.sol3.bindings.XTraversal;
 import it.polito.dp2.NFFG.sol3.bindings.XVerification;
 import it.polito.dp2.NFFG.sol3.bindings.XNode;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientHandlerException;
-import com.sun.jersey.api.client.UniformInterfaceException;
+import javax.ws.rs.*;
 
 import java.io.File;
 import java.util.Calendar;
@@ -27,6 +25,9 @@ import java.util.Set;
 
 import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -50,7 +51,8 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 	
 	public NFFGClientConcrete() throws ServiceException{
 		try {
-			client = Client.create();
+			
+			client = ClientBuilder.newClient();
 			factory = it.polito.dp2.NFFG.NffgVerifierFactory.newInstance();
 			monitor = factory.newNffgVerifier();
 		} catch (NffgVerifierException e) {
@@ -86,16 +88,17 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 		String resourceName = baseServiceUrl + "nffg";
 		try{
 			XNffg response=
-					client.resource(resourceName)
-					.type(MediaType.APPLICATION_XML)
+					client.target(resourceName)
+					.request(MediaType.APPLICATION_XML)
 					.accept(MediaType.APPLICATION_XML)
-					.entity(of.createNffg(xnffg))
-					.post(XNffg.class);
+					.post(Entity.xml(of.createNffg(xnffg)),XNffg.class);
 			
 			//DEBUG
 //			this.printXML(null,of.createNffg(response));
-		}catch(UniformInterfaceException e){
-			System.out.println(e.getResponse().getEntity(String.class));
+		}catch(WebApplicationException e){
+			
+//			System.out.println(e.getResponse().getEntity(String.class));
+			System.out.println(e.getMessage());
 			switch(e.getResponse().getStatus()){
 			case ReturnStatus.FORBIDDEN:
 				throw new AlreadyLoadedException(ReturnStatus.FORBIDDEN +" - Error - Nffg already existing! Impossible to create it!");
@@ -106,10 +109,10 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 			}
 		
 		}
-		catch(ClientHandlerException e){
-			System.out.println("Error 500 - Internal server error\n" + e.getMessage());
-			throw new ServiceException("Error 500 - Internal server error\n");
-		}
+//		catch(ClientHandlerException e){
+//			System.out.println("Error 500 - Internal server error\n" + e.getMessage());
+//			throw new ServiceException("Error 500 - Internal server error\n");
+//		}
 		catch(Exception e){
 			e.printStackTrace();
 			throw new ServiceException("Error - Unexpected exception, impossble to create the nffg ");
@@ -149,14 +152,12 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 		//send the set of nffgs without policies
 		try{
 			response = 
-			 client.resource(resourceName)
+			 client.target(resourceName)
+					 .request(MediaType.APPLICATION_XML)
 					.accept(MediaType.APPLICATION_XML)
-					.type(MediaType.APPLICATION_XML)
-					.entity(of.createNffgs(xnffgs))
-					.post(XNffgs.class);
-		}catch(UniformInterfaceException e){
-			System.out.println(e.getResponse().getEntity(String.class));
-
+					.post(Entity.xml(of.createNffgs(xnffgs)),XNffgs.class);
+		}catch(WebApplicationException e){
+			System.out.println(e.getMessage());
 			switch(e.getResponse().getStatus()){
 			case ReturnStatus.FORBIDDEN:
 				throw new AlreadyLoadedException(ReturnStatus.FORBIDDEN +" - Error - Nffgs At least one nffg is already existing in the server!");
@@ -167,9 +168,9 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 			default:
 				throw new ServiceException(e.getResponse().getStatus()+" Error - Nffgs reported an unexpected error while adding them.");
 			}
-		}catch(ClientHandlerException e){
-			System.out.println("Error 500 - Internal server error\n" + e.getMessage());
-			throw new ServiceException("Error 500 - Internal server error\n");
+//		}catch(ClientHandlerException e){
+//			System.out.println("Error 500 - Internal server error\n" + e.getMessage());
+//			throw new ServiceException("Error 500 - Internal server error\n");
 		}catch(Exception e){
 			e.printStackTrace();
 			System.out.println(e.getMessage());
@@ -206,16 +207,15 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 //		this.printXML("prova.xml", xpolicies);
 		
 		try{
-			responseP = client.resource(resourceName)
+			responseP = client.target(resourceName)
+					.request(MediaType.APPLICATION_XML)
 					.accept("application/xml")
-					.type("application/xml")
-					.entity(of.createPolicies(xpolicies))
-					.post(XPolicies.class);
+					.post(Entity.xml(of.createPolicies(xpolicies)),XPolicies.class);
 			
 //			this.printXML(null, of.createPolicies(responseP));
 		
-		}catch(UniformInterfaceException e){
-			System.out.println(e.getResponse().getEntity(String.class));
+		}catch(WebApplicationException e){
+//			System.out.println(e.getResponse().getEntity(String.class));
 			System.out.println(e.getMessage());
 
 			switch(e.getResponse().getStatus()){
@@ -231,9 +231,9 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 			default:
 				throw new ServiceException(e.getResponse().getStatus()+" Error - Policy unexpected error during deletion of the policy");
 			}
-		}catch(ClientHandlerException e){
-			System.out.println("Error 500 - Internal server error\n" + e.getMessage());
-			throw new ServiceException("Error 500 - Internal server error\n");
+//		}catch(ClientHandlerException e){
+//			System.out.println("Error 500 - Internal server error\n" + e.getMessage());
+//			throw new ServiceException("Error 500 - Internal server error\n");
 		}catch(Exception e){
 			e.printStackTrace();
 			System.out.println(e.getMessage());
@@ -255,35 +255,33 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 		String resourceName = baseServiceUrl + "policy";
 		XPolicy response;
 		try{
-			response = client.resource(resourceName)
+			response = client.target(resourceName)
+					.request(MediaType.APPLICATION_XML)
 					.accept(MediaType.APPLICATION_XML)
-					.type(MediaType.APPLICATION_XML)
-					.entity(of.createPolicy(xpolicy))
-					.post(XPolicy.class);
+					.post(Entity.xml(of.createPolicy(xpolicy)),XPolicy.class);
 //			this.printXML(null, of.createPolicy(response));
-		}catch(UniformInterfaceException e){
-			System.out.println(e.getResponse().getEntity(String.class));
+		}catch(WebApplicationException e){
 			System.out.println(e.getMessage());
 
 			
 			switch(e.getResponse().getStatus()){
 			case ReturnStatus.NOT_FOUND:
-				System.out.println(e.getResponse().getEntity(String.class));
+				System.out.println(e.getMessage());
 				throw new UnknownNameException(ReturnStatus.NOT_FOUND+ " - Error - Nffg referring to the policy is not existing");
 			case ReturnStatus.FORBIDDEN:
 				//this case can't occur in this program, because the client is set up in order to always overwrite existing policies.
 				//It is added to respect the description of web service I created for assignment1.
-				System.out.println(e.getResponse().getEntity(String.class));
-				throw new ServiceException(e.getResponse().getEntity(String.class));
+				System.out.println(e.getMessage());
+				throw new ServiceException(e.getMessage());
 			
 			case ReturnStatus.INTERNAL_SERVER_ERROR:
 				throw new  ServiceException(e.getResponse().getStatus()+" - Error " +e.getMessage());
 			default:
 				throw new ServiceException("Error - Policy unexpected error during deletion of the policy");
 			}
-		}catch(ClientHandlerException e){
-			System.out.println("Error 500 - Internal server error\n" + e.getMessage());
-			throw new ServiceException("Error 500 - Internal server error\n");
+//		}catch(ClientHandlerException e){
+//			System.out.println("Error 500 - Internal server error\n" + e.getMessage());
+//			throw new ServiceException("Error 500 - Internal server error\n");
 		}catch(Exception e){
 			e.printStackTrace();
 			System.out.println(e.getMessage());
@@ -303,28 +301,27 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 		String resourceName = baseServiceUrl + "policy/"+ name;
 		XPolicy response;
 		try{
-			response = client.resource(resourceName)
+			response = client.target(resourceName)
+					.request()
 					.accept(MediaType.APPLICATION_XML)
-					.type(MediaType.APPLICATION_XML)
 					.delete(XPolicy.class);
 			
 //			this.printXML(null, of.createPolicy(response));
-		}catch(UniformInterfaceException e){
-			System.out.println(e.getResponse().getEntity(String.class));
+		}catch(WebApplicationException e){
 			System.out.println(e.getMessage());
 
 			switch(e.getResponse().getStatus()){
 			case ReturnStatus.NOT_FOUND:
-				System.out.println(e.getResponse().getEntity(String.class));
+				System.out.println(e.getMessage());
 				throw new UnknownNameException(ReturnStatus.NOT_FOUND + " Error - The policy you want to delete is not existing");
 			case ReturnStatus.INTERNAL_SERVER_ERROR:
 				throw new  ServiceException(e.getResponse().getStatus()+" - Error " +e.getMessage());
 			default:
 				throw new ServiceException("--Error - Policy unexpected error during deletion of the policy");
 			}
-		}catch(ClientHandlerException e){
-			System.out.println("Error 500 - Internal server error\n" + e.getMessage());
-			throw new ServiceException("Error 500 - Internal server error\n");
+//		}catch(ClientHandlerException e){
+//			System.out.println("Error 500 - Internal server error\n" + e.getMessage());
+//			throw new ServiceException("Error 500 - Internal server error\n");
 		}catch(Exception e){
 			e.printStackTrace();
 			System.out.println(e.getMessage());
@@ -339,26 +336,25 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 		
 		XPolicy response;
 		try{
-			response = client.resource(resourceName)
+			response = client.target(resourceName)
+					.request(MediaType.APPLICATION_XML)
 					.accept(MediaType.APPLICATION_XML)
-					.type(MediaType.APPLICATION_XML)
-					.post(XPolicy.class);
-		}catch(UniformInterfaceException e){
-			System.out.println(e.getResponse().getEntity(String.class));
+					.post(null,XPolicy.class);
+		}catch(WebApplicationException e){
 			System.out.println(e.getMessage());
 
 			switch(e.getResponse().getStatus()){
 			case ReturnStatus.NOT_FOUND:
-				System.out.println(e.getResponse().getEntity(String.class));
+//				System.out.println(e.getResponse().getEntity(String.class));
 				throw new UnknownNameException(ReturnStatus.NOT_FOUND + " Error - The policy you want to verify is not existing");
 			case ReturnStatus.INTERNAL_SERVER_ERROR:
 				throw new  ServiceException(e.getResponse().getStatus()+" - Error " +e.getMessage());
 			default:			
 			throw new ServiceException(e.getResponse().getStatus()+ "--Error - Policy unexpected error verification of the policy");
 			}
-		}catch(ClientHandlerException e){
-			System.out.println("Error 500 - Internal server error\n" + e.getMessage());
-			throw new ServiceException("Error 500 - Internal server error\n");
+//		}catch(ClientHandlerException e){
+//			System.out.println("Error 500 - Internal server error\n" + e.getMessage());
+//			throw new ServiceException("Error 500 - Internal server error\n");
 		}catch(Exception e){
 			e.printStackTrace();
 			System.out.println(e.getMessage());
