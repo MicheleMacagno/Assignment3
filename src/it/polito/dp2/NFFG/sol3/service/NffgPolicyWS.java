@@ -77,12 +77,7 @@ public class NffgPolicyWS {
 	public Response storeNffgsByName(XNffgs xnffgs) throws ForbiddenException {
 		
 		XNffgs rxnffgs = NffgPolicyService.addXNffgs(xnffgs);
-		if(rxnffgs != null){
-			return Response.status(201).entity(of.createNffgs(xnffgs)).build();
-		}
-		else{
-			return Response.status(404).entity("Impossible to create the object. Verify the name of nffg is not already existing").build();
-		}
+		return Response.status(201).entity(of.createNffgs(rxnffgs)).build();
   	}
 	
 	@GET
@@ -93,31 +88,6 @@ public class NffgPolicyWS {
 		XNffgs rxnffgs = NffgPolicyService.getXNffgs();
 		return Response.status(200).entity(of.createNffgs(rxnffgs)).build();
 	}
-	
-//NOT TO BE IMPLEMENTED	
-//	@DELETE
-//	@Path("/nffgs")
-//	public Response deleteAllNffgs(){
-//		NffgPolicyService.deleteAllXNffgs();
-//		return Response.status(204).build();
-//	}
-	
-//NOT TO BE IMPLEMENTED	
-//	@DELETE
-//	@Path("/nffg/{name: [a-zA-Z_][a-zA-Z0-9_]*}")
-//	@Produces(MediaType.APPLICATION_XML)
-//	public Response deleteNffgByName(
-//			@DefaultValue("y") @QueryParam("delpolicy") String delpolicy
-//			,@PathParam("name") String name) throws NotFoundException{
-//		
-//		if(!(delpolicy.equals("y") || delpolicy.equals("n"))){
-//			throw new ForbiddenException("You must specify either y/n for delpolicy parameter",
-//					Response.status(403).entity("You must specify either y/n for delpolicy parameter").build());
-//		}
-//		XNffg rxnffg = NffgPolicyService.deleteNffgByName(name,delpolicy);
-//		return Response.status(200).entity(of.createNffg(rxnffg)).build();
-//	}
-	
 	
 	@POST
 	@Path("policy")
@@ -184,12 +154,8 @@ public class NffgPolicyWS {
 					Response.status(405).entity("The parameter overwrite can be only y or n").build());
 		}
 			
-		if(rxpolicies != null){
-			return Response.status(201).entity(of.createPolicies(rxpolicies)).build();
-		}
-		else{
-			return Response.status(404).entity("Impossible to create the object. Verify the name of nffg is not already existing").build();
-		}
+		return Response.status(201).entity(of.createPolicies(rxpolicies)).build();
+		
   	}
 	
 	@GET
@@ -225,11 +191,12 @@ public class NffgPolicyWS {
 		return Response.status(200).entity(of.createPolicy(rxpolicy)).build();
 	}
 	
+//TODO remove
 	@POST
 	@Path("errore")
 	@Consumes(MediaType.APPLICATION_XML)
 	@Produces(MediaType.APPLICATION_XML)
-	public Response produceErrore(XPolicy xpolicy) throws NotFoundException,ForbiddenException,InternalServerErrorException{
+	public Response produceErrore(XPolicy xpolicy){
 		throw new InternalServerErrorException("prova",Response.status(500).entity("prova di errore").build());
 	}
 	

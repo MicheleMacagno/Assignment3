@@ -507,7 +507,6 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 			case ReturnStatus.FORBIDDEN:
 				throw new AlreadyLoadedException(ReturnStatus.FORBIDDEN +" - Error - Nffg already existing! Impossible to create it!");
 			case ReturnStatus.INTERNAL_SERVER_ERROR:
-				
 				throw new  ServiceException(e.getResponse().getStatus()+" - Error " +e.getMessage());
 			default:
 				throw new ServiceException(e.getResponse().getStatus()+" Error - Unexpected exception, impossble to create the nffg");

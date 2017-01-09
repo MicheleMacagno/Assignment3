@@ -20,9 +20,9 @@ public class Main {
 	public static void main(String args[]){
 //		testGetEmptySetNffgs();
 //		testPostGetSetNffgs();
-//		testGeneraErrori();
+		testGeneraErrori();
 //		testPostSingleNffg();
-		testVerificaPolicyErrate();
+//		testVerificaPolicyErrate();
 	
 	}
 	
