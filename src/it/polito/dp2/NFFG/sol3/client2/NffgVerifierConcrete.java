@@ -13,8 +13,9 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.validation.SchemaFactory;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.UniformInterfaceException;
+import javax.ws.rs.*;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
 
 import it.polito.dp2.NFFG.NffgReader;
 import it.polito.dp2.NFFG.NffgVerifier;
@@ -40,7 +41,7 @@ public class NffgVerifierConcrete implements NffgVerifier {
 	
 	public NffgVerifierConcrete(String baseServiceUrl) throws NffgVerifierException{
 		try{
-			client = Client.create();
+			client = ClientBuilder.newClient();
 			of=new ObjectFactory();
 			
 			setNffgReader = new LinkedHashSet<NffgReader>(0);
@@ -50,16 +51,16 @@ public class NffgVerifierConcrete implements NffgVerifier {
 			String resourceName = baseServiceUrl + "nffgs";
 			try{
 				xnffgs=
-					client.resource(resourceName)
-					.accept(MediaType.APPLICATION_XML)
+					client.target(resourceName)
+					.request(MediaType.APPLICATION_XML)
 					.get(XNffgs.class);
 				
 				//DEBUG
 //				this.printXML(null,of.createNffgs(xnffgs));
-			}catch(UniformInterfaceException e){
+			}catch(WebApplicationException e){
 				if(e.getResponse().getStatus()==ReturnStatus.NOT_FOUND){
 					System.out.println("404 Error - Probably the service is not available!!");
-//					e.printStackTrace();
+					throw new NffgVerifierException(e);
 				}
 				throw new NffgVerifierException(e);
 			}catch(Exception e){
@@ -73,8 +74,8 @@ public class NffgVerifierConcrete implements NffgVerifier {
 			resourceName = baseServiceUrl + "policies";
 			try{
 				xpolicies =
-					client.resource(resourceName)
-					.accept(MediaType.APPLICATION_XML)
+					client.target(resourceName)
+					.request(MediaType.APPLICATION_XML)
 					.get(XPolicies.class);
 				
 				//DEBUG
