@@ -93,7 +93,8 @@
 	</target>
 	
 	<!--	Added by me to speed up main execution -->
-	<target name="run-main" depends="setseed, redeployWS, redeployNeo4JXML,build-client">
+	<!--<target name="run-main" depends="setseed, redeployWS, redeployNeo4JXML,build-client"> -->
+	<target name="run-main" depends="setseed,build-client">
 		<echo>Running Main...</echo>
 				<java classname="it.polito.dp2.NFFG.sol3.service.Main" failonerror="true" fork="yes">
 					<sysproperty key="it.polito.dp2.NFFG.NFFGClientFactory" value="${NFFGClientFactory}" />

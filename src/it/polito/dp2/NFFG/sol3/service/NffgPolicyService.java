@@ -408,13 +408,15 @@ public class NffgPolicyService {
 	public static synchronized XPolicy updatePolicyByName(String name,XPolicy xpolicy) throws NotFoundException,ForbiddenException{
 		xpolicy.setName(name);
 		if(!mapXNffg.containsKey(xpolicy.getNffg())){
-			throw new ForbiddenException("Error - Nffg name not existing",Response.status(403).entity("Error - Nffg name not existing").build());
+			throw new ForbiddenException("Error - Nffg name not existing",
+					Response.status(403).entity("Error - Nffg name not existing").build());
 		}
 		if(mapXPolicy.containsKey(name)){
 			mapXPolicy.put(name,xpolicy);
 			return xpolicy;
 		}else{
-			throw new NotFoundException("The policy is not existing, impossible to update it",Response.status(404).entity("The policy is not existing, impossible to update it").build());
+			throw new NotFoundException("The policy is not existing, impossible to update it",
+					Response.status(404).entity("The policy is not existing, impossible to update it").build());
 		}
 	}
 	
@@ -436,7 +438,6 @@ public class NffgPolicyService {
 					mapNameNodesNeo.get(xpolicy.getSrc()) + 
 					"/paths?dst="+mapNameNodesNeo.get(xpolicy.getDst());
 			
-			System.out.println("+++++++++++++++++RESUORCE URL+++++++++++++++++++++");
 			System.out.println(resourceName);
 			
 			Paths paths = nps.client.resource(resourceName)
@@ -466,8 +467,8 @@ public class NffgPolicyService {
 		}catch(Exception e){
 			e.printStackTrace();
 			System.out.println("Error in retrieving the paths" + e.getMessage());
-			throw new NotFoundException("Unable to find a resource for validation",
-					Response.status(404).entity("Unable to find a resource for validation").build());
+			throw new InternalServerErrorException("Internal Server Error - Error in retrieving the paths",
+					Response.status(500).entity("Internal Server Error - Error in retrieving the paths!\nProblems while contacting neo4J").build());
 		}
 		
 		return xpolicy;

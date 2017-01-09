@@ -212,13 +212,8 @@ public class NffgPolicyWS {
 	@Path("/policy/{name: [a-zA-Z_][a-zA-Z0-9_]*}")
 	@Produces(MediaType.APPLICATION_XML)
 	public Response deletePolicyByName(@PathParam("name") String name) throws NotFoundException,Exception{
-		try{
-			XPolicy rxpolicy = NffgPolicyService.deletePolicyByName(name);
-			return Response.status(200).entity(of.createPolicy(rxpolicy)).build();
-		}catch(NotFoundException e){
-			return Response.status(404).entity("-------------------ERROR NOT FOUND-----------").build();
-//			throw new NotFoundException();
-		}
+		XPolicy rxpolicy = NffgPolicyService.deletePolicyByName(name);
+		return Response.status(200).entity(of.createPolicy(rxpolicy)).build();
 	}
 	
 	@PUT
