@@ -78,7 +78,7 @@ public class NffgPolicyWS {
 		
 		XNffgs rxnffgs = NffgPolicyService.addXNffgs(xnffgs);
 		if(rxnffgs != null){
-			return Response.status(200).entity(of.createNffgs(xnffgs)).build();
+			return Response.status(201).entity(of.createNffgs(xnffgs)).build();
 		}
 		else{
 			return Response.status(404).entity("Impossible to create the object. Verify the name of nffg is not already existing").build();
@@ -155,7 +155,7 @@ public class NffgPolicyWS {
 	@ApiOperation(	value = "Verify an existing policy", notes = "xml format required")
 	@Produces(MediaType.APPLICATION_XML)
 	public Response verifyPolicyByName(
-			@PathParam("name") String name) throws NotFoundException{
+			@PathParam("name") String name) throws NotFoundException,InternalServerErrorException{
 		
 		XPolicy rxpolicy = NffgPolicyService.verifyPolicy(name); 
 		return Response.status(200).entity(of.createPolicy(rxpolicy)).build();
@@ -185,7 +185,7 @@ public class NffgPolicyWS {
 		}
 			
 		if(rxpolicies != null){
-			return Response.status(200).entity(of.createPolicies(rxpolicies)).build();
+			return Response.status(201).entity(of.createPolicies(rxpolicies)).build();
 		}
 		else{
 			return Response.status(404).entity("Impossible to create the object. Verify the name of nffg is not already existing").build();
@@ -225,15 +225,13 @@ public class NffgPolicyWS {
 		return Response.status(200).entity(of.createPolicy(rxpolicy)).build();
 	}
 	
-//	@POST
-//	@Path("policies/verification")
-//	@Consumes(MediaType.APPLICATION_XML)
-//	@Produces(MediaType.APPLICATION_XML)
-//	public Response verifyPolicyByName(XVerificationRequest xverificationrequest) throws NotFoundException{
-//		XPolicies verified = NffgPolicyService.verifyPolicies(xverificationrequest);
-//		return Response.status(200).entity(verified).build();
-//	}
-//	
+	@POST
+	@Path("errore")
+	@Consumes(MediaType.APPLICATION_XML)
+	@Produces(MediaType.APPLICATION_XML)
+	public Response produceErrore(XPolicy xpolicy) throws NotFoundException,ForbiddenException,InternalServerErrorException{
+		throw new InternalServerErrorException("prova",Response.status(500).entity("prova di errore").build());
+	}
 	
 	
 	

@@ -58,15 +58,18 @@ public class NffgVerifierConcrete implements NffgVerifier {
 				//DEBUG
 //				this.printXML(null,of.createNffgs(xnffgs));
 			}catch(WebApplicationException e){
+				System.out.println(e.getMessage());
 				if(e.getResponse().getStatus()==ReturnStatus.NOT_FOUND){
 					System.out.println("404 Error - Probably the service is not available!!");
 					throw new NffgVerifierException(e);
 				}
 				throw new NffgVerifierException(e);
 			}catch(Exception e){
+			
 				System.out.println("404 Error - Probably the service is not available!!");
 				System.out.println("Error - Unexcpected error while trying to retrieve the set of nffgs contacting the web service");
 //				e.printStackTrace();
+				System.out.println(e.getMessage());
 				throw new NffgVerifierException(e);
 			}
 			

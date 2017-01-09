@@ -12,13 +12,17 @@ import it.polito.dp2.NFFG.lab3.NFFGClientException;
 import it.polito.dp2.NFFG.lab3.ServiceException;
 import it.polito.dp2.NFFG.lab3.UnknownNameException;
 import it.polito.dp2.NFFG.sol3.bindings.XNffg;
+import it.polito.dp2.NFFG.sol3.client1.NFFGClientConcrete;
 import it.polito.dp2.NFFG.sol3.client1.NFFGClientFactory;
 import it.polito.dp2.NFFG.sol3.client2.NffgVerifierConcrete;
 
 public class Main {
 	public static void main(String args[]){
 //		testGetEmptySetNffgs();
-		testPostGetSetNffgs();
+//		testPostGetSetNffgs();
+//		testGeneraErrori();
+//		testPostSingleNffg();
+		testVerificaPolicyErrate();
 	
 	}
 	
@@ -50,7 +54,7 @@ public class Main {
 			
 // --TEST INSERT SINGLE NFFG
 				try {
-					nc.loadNFFG("Nffg0");
+					nc.loadNFFG("Nffg2");
 				} catch (UnknownNameException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -258,5 +262,97 @@ public class Main {
 		}
 			
 //TEST GET EMPTY SET OF POLICIES
+	}
+	
+	public static void testVerificaPolicyErrate(){
+		NFFGClient nc = null;
+		NffgVerifierConcrete nv = null;
+
+		NFFGClientFactory ncf = (NFFGClientFactory) NFFGClientFactory.newInstance();
+		try {
+			nc = ncf.newNFFGClient();
+			try {
+				nc.loadAll();
+				try {
+					nc.testReachabilityPolicy("Policy0");
+				} catch (UnknownNameException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				try {
+					nc.testReachabilityPolicy("PolicyWrong");
+				} catch (UnknownNameException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			} catch (AlreadyLoadedException e){
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			catch(ServiceException e) {
+				e.printStackTrace();
+			}
+		} catch (NFFGClientException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
+		
+		try {
+			it.polito.dp2.NFFG.sol3.client2.NffgVerifierFactory nvf = it.polito.dp2.NFFG.sol3.client2.NffgVerifierFactory.newInstance();
+			nv = (NffgVerifierConcrete) nvf.newNffgVerifier();
+			
+		} catch (NffgVerifierException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+		try {
+			Set<NffgReader> set = nv.getNffgs();
+			set.stream().forEach(n->{
+				System.out.println(n.getName());
+			});
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	public static void testGeneraErrori(){
+		NFFGClient nc = null;
+		NffgVerifierConcrete nv = null;
+
+		NFFGClientFactory ncf = (NFFGClientFactory) NFFGClientFactory.newInstance();
+		try {
+			nc = ncf.newNFFGClient();
+			try {
+				((NFFGClientConcrete) nc).generaErrori();
+				nc.loadAll();
+			} catch (AlreadyLoadedException | ServiceException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} catch (NFFGClientException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
+		
+		try {
+			it.polito.dp2.NFFG.sol3.client2.NffgVerifierFactory nvf = it.polito.dp2.NFFG.sol3.client2.NffgVerifierFactory.newInstance();
+			nv = (NffgVerifierConcrete) nvf.newNffgVerifier();
+			
+		} catch (NffgVerifierException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+		try {
+			Set<NffgReader> set = nv.getNffgs();
+			set.stream().forEach(n->{
+				System.out.println(n.getName());
+			});
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }

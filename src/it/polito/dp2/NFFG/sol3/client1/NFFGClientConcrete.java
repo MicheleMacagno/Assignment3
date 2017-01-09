@@ -109,10 +109,6 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 			}
 		
 		}
-//		catch(ClientHandlerException e){
-//			System.out.println("Error 500 - Internal server error\n" + e.getMessage());
-//			throw new ServiceException("Error 500 - Internal server error\n");
-//		}
 		catch(Exception e){
 			e.printStackTrace();
 			throw new ServiceException("Error - Unexpected exception, impossble to create the nffg ");
@@ -168,9 +164,6 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 			default:
 				throw new ServiceException(e.getResponse().getStatus()+" Error - Nffgs reported an unexpected error while adding them.");
 			}
-//		}catch(ClientHandlerException e){
-//			System.out.println("Error 500 - Internal server error\n" + e.getMessage());
-//			throw new ServiceException("Error 500 - Internal server error\n");
 		}catch(Exception e){
 			e.printStackTrace();
 			System.out.println(e.getMessage());
@@ -231,9 +224,6 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 			default:
 				throw new ServiceException(e.getResponse().getStatus()+" Error - Policy unexpected error during deletion of the policy");
 			}
-//		}catch(ClientHandlerException e){
-//			System.out.println("Error 500 - Internal server error\n" + e.getMessage());
-//			throw new ServiceException("Error 500 - Internal server error\n");
 		}catch(Exception e){
 			e.printStackTrace();
 			System.out.println(e.getMessage());
@@ -279,9 +269,6 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 			default:
 				throw new ServiceException("Error - Policy unexpected error during deletion of the policy");
 			}
-//		}catch(ClientHandlerException e){
-//			System.out.println("Error 500 - Internal server error\n" + e.getMessage());
-//			throw new ServiceException("Error 500 - Internal server error\n");
 		}catch(Exception e){
 			e.printStackTrace();
 			System.out.println(e.getMessage());
@@ -319,9 +306,6 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 			default:
 				throw new ServiceException("--Error - Policy unexpected error during deletion of the policy");
 			}
-//		}catch(ClientHandlerException e){
-//			System.out.println("Error 500 - Internal server error\n" + e.getMessage());
-//			throw new ServiceException("Error 500 - Internal server error\n");
 		}catch(Exception e){
 			e.printStackTrace();
 			System.out.println(e.getMessage());
@@ -352,9 +336,6 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 			default:			
 			throw new ServiceException(e.getResponse().getStatus()+ "--Error - Policy unexpected error verification of the policy");
 			}
-//		}catch(ClientHandlerException e){
-//			System.out.println("Error 500 - Internal server error\n" + e.getMessage());
-//			throw new ServiceException("Error 500 - Internal server error\n");
 		}catch(Exception e){
 			e.printStackTrace();
 			System.out.println(e.getMessage());
@@ -501,5 +482,37 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 		}
 		return xpolicy;
 	}
-
+	
+//TODO: remove it
+	public void generaErrori() throws AlreadyLoadedException, ServiceException{
+		try{
+	
+			String resourceName=baseServiceUrl+"errore";
+			XNffg xnffg = new XNffg();
+			xnffg.setName("nodoerrore");
+			XNffg response=
+					client.target(resourceName)
+					.request(MediaType.APPLICATION_XML)
+					.accept(MediaType.APPLICATION_XML)
+					.post(Entity.xml(of.createNffg(xnffg)),XNffg.class);
+			
+			//DEBUG
+//			this.printXML(null,of.createNffg(response));
+		}catch(WebApplicationException e){
+			
+//			System.out.println(e.getResponse().getEntity(String.class));
+			System.out.println(e.getMessage());
+			System.out.println("Errore" + e.getResponse().getStatus());
+			switch(e.getResponse().getStatus()){
+			case ReturnStatus.FORBIDDEN:
+				throw new AlreadyLoadedException(ReturnStatus.FORBIDDEN +" - Error - Nffg already existing! Impossible to create it!");
+			case ReturnStatus.INTERNAL_SERVER_ERROR:
+				
+				throw new  ServiceException(e.getResponse().getStatus()+" - Error " +e.getMessage());
+			default:
+				throw new ServiceException(e.getResponse().getStatus()+" Error - Unexpected exception, impossble to create the nffg");
+			}
+		
+		}
+	}
 }
