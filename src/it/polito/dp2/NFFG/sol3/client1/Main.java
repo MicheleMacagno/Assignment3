@@ -1,6 +1,13 @@
-package it.polito.dp2.NFFG.sol3.service;
+package it.polito.dp2.NFFG.sol3.client1;
 
 import java.util.Set;
+
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.MediaType;
+
+import com.sun.jersey.api.client.ClientHandler;
 
 import it.polito.dp2.NFFG.NffgReader;
 import it.polito.dp2.NFFG.NffgVerifier;
@@ -12,18 +19,17 @@ import it.polito.dp2.NFFG.lab3.NFFGClientException;
 import it.polito.dp2.NFFG.lab3.ServiceException;
 import it.polito.dp2.NFFG.lab3.UnknownNameException;
 import it.polito.dp2.NFFG.sol3.bindings.XNffg;
-import it.polito.dp2.NFFG.sol3.client1.NFFGClientConcrete;
-import it.polito.dp2.NFFG.sol3.client1.NFFGClientFactory;
+import it.polito.dp2.NFFG.sol3.bindings.XPolicy;
 import it.polito.dp2.NFFG.sol3.client2.NffgVerifierConcrete;
 
 public class Main {
 	public static void main(String args[]){
 //		testGetEmptySetNffgs();
 //		testPostGetSetNffgs();
-		testGeneraErrori();
+//		testGeneraErrori();
 //		testPostSingleNffg();
 //		testVerificaPolicyErrate();
-	
+		testVerificaPolicyOnTheGo();
 	}
 	
 	public static void testPostSingleNffg(){
@@ -354,5 +360,32 @@ public class Main {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	
+	public static void testVerificaPolicyOnTheGo(){
+		Client client;
+		client = ClientBuilder.newClient();
+		String baseServiceUrl = "http://localhost:8081/NffgService/rest/";
+		it.polito.dp2.NFFG.sol3.bindings.ObjectFactory of = new it.polito.dp2.NFFG.sol3.bindings.ObjectFactory();
+		
+		XPolicy policy = new XPolicy();
+		policy.setNffg("Nffg3");
+		policy.setName("OnTheFlyPippo");
+		policy.setSrc("WEBCLIENT0");
+		policy.setDst("MAILSERVER3");
+		policy.setPositivity(true);
+		
+		
+		client.target(baseServiceUrl+"policy")
+		.request(MediaType.APPLICATION_XML)
+		.accept(MediaType.APPLICATION_XML)
+		.post(Entity.xml(of.createPolicy(policy)),XPolicy.class);
+		
+		client.target(baseServiceUrl+"policy/OnTheFlyPippo")
+		.request(MediaType.APPLICATION_XML)
+		
+		.post(null,XPolicy.class);
+		
+		
 	}
 }
