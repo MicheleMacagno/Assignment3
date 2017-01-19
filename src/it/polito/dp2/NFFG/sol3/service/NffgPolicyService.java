@@ -70,14 +70,15 @@ public class NffgPolicyService {
 		}
 	}
 	
-	public XNffg getXNffgByName(String name){
+	public XNffg getXNffgByName(String name) throws NotFoundException{
 		synchronized(mapXNffg){
 			if(mapXNffg.containsKey(name)){
 				return mapXNffg.get(name);
 			}
 			else{
 				logger.log(Level.WARNING,"Nffg not found in the database");
-				throw new NotFoundException("Nffg not found in the database",Response.status(404).entity("Nffg not found in the database").build());
+				throw new NotFoundException("Nffg not found in the database",
+						Response.status(404).entity("Nffg not found in the database").build());
 			}
 		}
 	}
@@ -102,10 +103,13 @@ public class NffgPolicyService {
 			
 			//This control is necessary to avoid the insertion of one or more nffgs in case 
 			//at least one nffg is already existing
+			
+			//Garanties Atomicity of the operation
 			xnffgs.getNffg().forEach(n->{
 				if(mapXNffg.containsKey(n.getName())){
 					logger.log(Level.WARNING,"At least one of the Nffg in the set is already existing");
-					throw new ForbiddenException("At least one of the Nffg in the set is already existing",Response.status(403).entity("At least one of the Nffg in the set is already existing").build());
+					throw new ForbiddenException("At least one of the Nffg in the set is already existing",
+							Response.status(403).entity("At least one of the Nffg in the set is already existing").build());
 				}
 			});
 			
@@ -127,11 +131,10 @@ public class NffgPolicyService {
 	 * XNffg element: with up to date information (i.e. Last Update Time)
 	 * Throws Exceptions on failures
 	 */
-	public XNffg addXNffg(XNffg nffg){
+	public XNffg addXNffg(XNffg nffg) throws ForbiddenException,InternalServerErrorException{
 		//at the end of the procedure it is inserted in the big map, containing as Key the name of Nfg, and as content the set of Nodes (with
 		//relative Neo4J Id of Nodes
 		ConcurrentHashMap<String,String> tmpMapNameNodesNeo  = new ConcurrentHashMap<String,String>();
-//TODO: verify still useful
 		String nffgNodeId; //contains the id received from neo4j after creating the NffgNode - NffgNode / Neo4J id
 		
 		
@@ -314,7 +317,8 @@ public class NffgPolicyService {
 			}
 			else{
 				logger.log(Level.WARNING,"Error - Nffg name already existing - Please submit a Nffg with a different name ");
-				throw new ForbiddenException("Error - Nffg name already existing - Please submit a Nffg with a different name ",Response.status(403).entity("Error - Nffg name already existing").build());
+				throw new ForbiddenException("Error - Nffg name already existing - Please submit a Nffg with a different name ",
+						Response.status(403).entity("Error - Nffg name already existing").build());
 			}
 		}
 	}
@@ -325,14 +329,15 @@ public class NffgPolicyService {
 	 * @return the XPolicy object in case of success
 	 * Throws a NotFoundException if the policy does not exist.
 	 */
-	public XPolicy getXPolicyByName(String name){
+	public XPolicy getXPolicyByName(String name) throws NotFoundException{
 		
 		synchronized(mapXPolicy){
 			if(mapXPolicy.containsKey(name)){
 				return mapXPolicy.get(name);
 			}
 			else{
-				throw new NotFoundException("The requested Policy is not existing", Response.status(404).entity("The requested Policy is not existing").build());
+				throw new NotFoundException("The requested Policy is not existing", 
+						Response.status(404).entity("The requested Policy is not existing").build());
 			}
 		}
 	}
@@ -363,7 +368,7 @@ public class NffgPolicyService {
 	 * 
 	 */
 	//TODO: add conformity check to xml 
-	public XPolicy addXPolicyVerifyXNffg(XPolicy policy){
+	public XPolicy addXPolicyVerifyXNffg(XPolicy policy) throws NotFoundException{
 		
 		//these two synchronized allow us to exploit a bit more parallelism of operations
 		//operations are exploited both on policy and in nffg
@@ -373,7 +378,8 @@ public class NffgPolicyService {
 				
 				if(!mapXNffg.containsKey(policy.getNffg())){
 					logger.log(Level.WARNING,"Error - Nffg not existing");
-					throw new NotFoundException("Error - Nffg name not existing",Response.status(403).entity("Error - Nffg name not existing").build());
+					throw new NotFoundException("Error - Nffg name not existing",
+							Response.status(404).entity("Error - Nffg name not existing").build());
 				}
 				else{
 					//allowed to overwrite existing policies
@@ -386,23 +392,24 @@ public class NffgPolicyService {
 	
 	
 	//TODO: manage policy not existing or nffg not existing
-	public XPolicies addXPolicies(XPolicies xpolicies) {
+	public XPolicies addXPolicies(XPolicies xpolicies) throws NotFoundException,InternalServerErrorException {
 		synchronized(mapXNffg){
 			synchronized(mapXPolicy){
 				
-				try{
 					XPolicies returnedXPolicies = new XPolicies();
 					
 					//verify if the Nffg related to the policies are really existing
 					xpolicies.getPolicy().forEach(p->{
 						if(!mapXNffg.containsKey(p.getNffg())){
 							logger.log(Level.WARNING,"The nffg corresponding to the policy is not existing");
-							throw new NotFoundException("The nffg corresponding to the policy is not existing",Response.status(404).entity("The nffg corresponding to the policy is not existing").build());
+							throw new NotFoundException("The nffg corresponding to the policy is not existing",
+									Response.status(404).entity("The nffg corresponding to the policy is not existing").build());
 						}
 					});		
 					
-					
-					List<XPolicy> list = returnedXPolicies.getPolicy();
+				try{
+					//prepare a list of all created policies. To give back to the service 
+					List<XPolicy> list = returnedXPolicies.getPolicy(); //initialize
 					xpolicies.getPolicy().forEach(p->{
 						//sometimes the verification can be totally empty
 						if(p.getVerification()==null){
@@ -416,10 +423,11 @@ public class NffgPolicyService {
 					});
 					
 					return returnedXPolicies;
-				}catch(NullPointerException e){
+				}catch(Exception e){
 					logger.log(Level.SEVERE,e.getMessage(),e);
 					 
-					throw new NotFoundException("NullPointerException",Response.status(404).entity("Error- null found").build());
+					throw new InternalServerErrorException("Unexpected Error in the system",
+							Response.status(500).entity("Unexpected Error in the system").build());
 				}
 				
 				
@@ -445,29 +453,33 @@ public class NffgPolicyService {
 				return xpolicy;
 			}
 			else{
-				throw new NotFoundException(Response.status(404).entity("The requested policy does not exists! Impossible to remove it").build());
+				throw new NotFoundException("The requested policy does not exists! Impossible to remove it",
+						Response.status(404).entity("The requested policy does not exists! Impossible to remove it").build());
 			}
 		}
 	}
 	
-	public XPolicy updatePolicyByName(String name,XPolicy xpolicy) throws NotFoundException,ForbiddenException{
+	public XPolicy updatePolicyByName(XPolicy xpolicy) throws NotFoundException,ForbiddenException{
 		
 		synchronized(mapXNffg){
 			synchronized(mapXPolicy){
 				
+				//Policy not existing
+				if(!mapXPolicy.containsKey(xpolicy.getName())){
+					throw new NotFoundException("The policy is not existing, impossible to update it",
+							Response.status(404).entity("The policy is not existing, impossible to update it").build());
+				}
 				
-				xpolicy.setName(name);
+				//Nffg of updated policy not existing
 				if(!mapXNffg.containsKey(xpolicy.getNffg())){
 					throw new ForbiddenException("Error - Nffg name not existing",
 							Response.status(403).entity("Error - Nffg name not existing").build());
 				}
-				if(mapXPolicy.containsKey(name)){
-					mapXPolicy.put(name,xpolicy);
-					return xpolicy;
-				}else{
-					throw new NotFoundException("The policy is not existing, impossible to update it",
-							Response.status(404).entity("The policy is not existing, impossible to update it").build());
-				}
+				
+				//Updated the policy and return it
+				mapXPolicy.put(xpolicy.getName(),xpolicy);
+				return xpolicy;
+				
 			}
 		}
 		
@@ -551,7 +563,6 @@ public class NffgPolicyService {
 		
 		GregorianCalendar c = new GregorianCalendar();
 		c.setTime(calendarDate);
-//TODO ENABLE
 		c.setTimeZone(cal.getTimeZone());
 		XMLGregorianCalendar date2 = null;
 		try {

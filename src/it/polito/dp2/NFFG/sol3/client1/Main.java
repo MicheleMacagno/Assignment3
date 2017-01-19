@@ -29,9 +29,12 @@ public class Main {
 //		testGeneraErrori();
 //		testPostSingleNffg();
 //		testVerificaPolicyErrate();
-		testVerificaPolicyOnTheGo();
+//		testVerificaPolicyOnTheGo();
+		testVerificaClient2();
 	}
 	
+	
+
 	public static void testPostSingleNffg(){
 //		System.setProperty("it.polito.dp2.NFFG.NFFGClientFactory",
 //				"it.polito.dp2.NFFG.sol3.client1.NFFGClientFactory");
@@ -387,5 +390,9 @@ public class Main {
 		.post(null,XPolicy.class);
 		
 		
+	}
+	
+	private static void testVerificaClient2() {
+		testPostGetSetNffgs();
 	}
 }

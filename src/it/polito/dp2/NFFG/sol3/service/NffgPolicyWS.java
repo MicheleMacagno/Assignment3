@@ -22,7 +22,10 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiResponse;
+import com.wordnik.swagger.annotations.ApiResponses;
 
 import it.polito.dp2.NFFG.sol3.bindings.XNffg;
 import it.polito.dp2.NFFG.sol3.bindings.XNffgs;
@@ -49,6 +52,11 @@ public class NffgPolicyWS {
 	@POST
 	@Path("nffg")
 	@ApiOperation(	value = "Create a new Nffg", notes = "xml format required")
+	@ApiResponses(value = {
+			@ApiResponse(code = 201, message= "Created"),
+			@ApiResponse(code = 403, message= "Nffg already existing"),
+			@ApiResponse(code = 500, message= "Internal server error")
+	})
 	@Produces(MediaType.APPLICATION_XML)
 	@Consumes(MediaType.APPLICATION_XML)
 	public Response storeNewNffgByName(@Context UriInfo uriInfo, XNffg xnffg) throws ForbiddenException, InternalServerErrorException {
@@ -61,6 +69,11 @@ public class NffgPolicyWS {
 	@GET
 	@Path("/nffg/{name: [a-zA-Z_][a-zA-Z0-9_]*}")
 	@ApiOperation( value = "Retrieve an Nffg given its name", notes="returns xml format")
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message= "OK"),
+			@ApiResponse(code = 404, message= "Nffg not found"),
+			@ApiResponse(code = 500, message= "Internal server error")
+	})
 	@Produces(MediaType.APPLICATION_XML)
 	public Response getNffgByName(@PathParam("name") String name) throws NotFoundException{
 		
@@ -71,6 +84,11 @@ public class NffgPolicyWS {
 	@POST
 	@Path("nffgs")
 	@ApiOperation(	value = "Create new nffgs", notes = "xml format required")
+	@ApiResponses(value = {
+			@ApiResponse(code = 201, message= "Created"),
+			@ApiResponse(code = 403, message= "At least a Nffg already existing"),
+			@ApiResponse(code = 500, message= "Internal server error")
+	})
 	@Produces(MediaType.APPLICATION_XML)
 	@Consumes(MediaType.APPLICATION_XML)
 	public Response storeNffgsByName(XNffgs xnffgs) throws ForbiddenException {
@@ -81,6 +99,11 @@ public class NffgPolicyWS {
 	
 	@GET
 	@Path("/nffgs")
+	@ApiOperation(	value = "Retrieve all nffgs", notes = "xml format returned")
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message= "OK"),
+			@ApiResponse(code = 500, message= "Internal server error")
+	})
 	@Produces(MediaType.APPLICATION_XML)
 	public Response getNffgs(){
 		
@@ -91,6 +114,11 @@ public class NffgPolicyWS {
 	@POST
 	@Path("policy")
 	@ApiOperation(	value = "Create a new Policy", notes = "xml format required")
+	@ApiResponses(value = {
+			@ApiResponse(code = 201, message= "Created"),
+			@ApiResponse(code = 404, message= "Nffg Not Found"),
+			@ApiResponse(code = 500, message= "Internal server error")
+	})
 	@Produces(MediaType.APPLICATION_XML)
 	@Consumes(MediaType.APPLICATION_XML)
 	public Response storePolicyByName(@Context UriInfo uriInfo,XPolicy xpolicy) throws BadRequestException, ForbiddenException{
@@ -102,7 +130,12 @@ public class NffgPolicyWS {
 		
 	@GET
 	@Path("policy/{name: [a-zA-Z_][a-zA-Z0-9_]*}")
-	@ApiOperation(	value = "Read an existing policy", notes = "xml format required")
+	@ApiOperation(	value = "Read an existing policy", notes = "xml format returned")
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message= "OK"),
+			@ApiResponse(code = 404, message= "Policy Not Found"),
+			@ApiResponse(code = 500, message= "Internal server error")
+	})
 	@Produces(MediaType.APPLICATION_XML)
 	public Response getPolicyByName(@PathParam("name") String name) throws NotFoundException{
 		XPolicy rxpolicy = nps.getXPolicyByName(name);
@@ -112,7 +145,12 @@ public class NffgPolicyWS {
 	
 	@POST
 	@Path("policy/{name: [a-zA-Z_][a-zA-Z0-9_]*}")
-	@ApiOperation(	value = "Verify an existing policy", notes = "xml format required")
+	@ApiOperation(	value = "Verify an existing policy", notes = "Empty Body")
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message= "OK"),
+			@ApiResponse(code = 404, message= "Policy Not Found"),
+			@ApiResponse(code = 500, message= "Internal server error")
+	})
 	@Produces(MediaType.APPLICATION_XML)
 	public Response verifyPolicyByName(
 			@PathParam("name") String name) throws NotFoundException,InternalServerErrorException{
@@ -125,6 +163,11 @@ public class NffgPolicyWS {
 	@POST
 	@Path("policies")
 	@ApiOperation(	value = "Create new set of policies", notes = "xml format required")
+	@ApiResponses(value = {
+			@ApiResponse(code = 201, message= "Created"),
+			@ApiResponse(code = 404, message= "Nffg to which a policy refer is Not Found"),
+			@ApiResponse(code = 500, message= "Internal server error")
+	})
 	@Produces(MediaType.APPLICATION_XML)
 	@Consumes(MediaType.APPLICATION_XML)
 	public Response storePolicies(XPolicies xpolicies) throws ForbiddenException,NotFoundException,Exception {
@@ -137,6 +180,11 @@ public class NffgPolicyWS {
 	
 	@GET
 	@Path("policies")
+	@ApiOperation(	value = "Retrieve all policies", notes = "xml format returned")
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message= "OK"),
+			@ApiResponse(code = 500, message= "Internal server error")
+	})
 	@Produces(MediaType.APPLICATION_XML)
 	public Response getPolicies()/* throws NotFoundException*/{
 		
@@ -146,6 +194,11 @@ public class NffgPolicyWS {
 	
 	@DELETE
 	@Path("policies")
+	@ApiOperation(	value = "Remove all policies", notes = "Empty request body/Empty Response Body")
+	@ApiResponses(value = {
+			@ApiResponse(code = 204, message= "All policies removed"),
+			@ApiResponse(code = 500, message= "Internal server error")
+	})
 	public Response deletePolicies(){
 		nps.deleteAllPolicies();
 		return Response.status(204).build();
@@ -153,6 +206,12 @@ public class NffgPolicyWS {
 	
 	@DELETE
 	@Path("/policy/{name: [a-zA-Z_][a-zA-Z0-9_]*}")
+	@ApiOperation(	value = "Remove Policy given its name", notes = "xml format policy returned")
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message= "OK Removed"),
+			@ApiResponse(code = 404, message= "Policy not found"),
+			@ApiResponse(code = 500, message= "Internal server error")
+	})
 	@Produces(MediaType.APPLICATION_XML)
 	public Response deletePolicyByName(@PathParam("name") String name) throws NotFoundException,Exception{
 		XPolicy rxpolicy = nps.deletePolicyByName(name);
@@ -161,16 +220,31 @@ public class NffgPolicyWS {
 	
 	@PUT
 	@Path("policy/{name: [a-zA-Z_][a-zA-Z0-9_]*}")
+	@ApiOperation(	value = "Update policy", notes = "xml format required")
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message= "Updated"),
+			@ApiResponse(code = 403, message= "Nffg of updated policy Not Existing"),
+			@ApiResponse(code = 404, message= "Policy not found"),
+			@ApiResponse(code = 500, message= "Internal server error")
+	})
 	@Consumes(MediaType.APPLICATION_XML)
 	@Produces(MediaType.APPLICATION_XML)
 	public Response updatePolicyByName(@PathParam("name") String name,XPolicy xpolicy) throws NotFoundException,ForbiddenException{
-		XPolicy rxpolicy = nps.updatePolicyByName(name, xpolicy);
+		xpolicy.setName(name);
+		XPolicy rxpolicy = nps.updatePolicyByName(xpolicy);
 		return Response.status(200).entity(of.createPolicy(rxpolicy)).build();
 	}
 	
 //TODO remove
 	@POST
 	@Path("errore")
+	@ApiOperation(	value = "TODO- REMOVE", notes = "xml format required")
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message= "Updated"),
+			@ApiResponse(code = 403, message= "Nffg of updated policy Not Existing"),
+			@ApiResponse(code = 404, message= "Policy not found"),
+			@ApiResponse(code = 500, message= "Internal server error")
+	})
 	@Consumes(MediaType.APPLICATION_XML)
 	@Produces(MediaType.APPLICATION_XML)
 	public Response produceErrore(XPolicy xpolicy){
