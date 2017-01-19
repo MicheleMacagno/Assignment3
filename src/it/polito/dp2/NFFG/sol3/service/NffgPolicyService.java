@@ -363,7 +363,7 @@ public class NffgPolicyService {
 	 * 
 	 */
 	//TODO: add conformity check to xml 
-	public XPolicy addXPolicyVerifyXNffg(XPolicy policy,Boolean overwrite){
+	public XPolicy addXPolicyVerifyXNffg(XPolicy policy){
 		
 		//these two synchronized allow us to exploit a bit more parallelism of operations
 		//operations are exploited both on policy and in nffg
@@ -376,23 +376,9 @@ public class NffgPolicyService {
 					throw new NotFoundException("Error - Nffg name not existing",Response.status(403).entity("Error - Nffg name not existing").build());
 				}
 				else{
-					if(!overwrite){
-						//not allowed to overwrite existing policies
-						if(mapXPolicy.putIfAbsent(policy.getName(), policy) == null){
-							//able to insert the element in the map
-							return policy;
-						}
-						else{
-							logger.log(Level.WARNING,"Error - Policy already existing");
-							throw new ForbiddenException("Error - Policy already existing. Cannot overwrite it",Response.status(403).entity("Error - Policy already existing. Cannot overwrite it").build());
-							
-						}
-					}
-					else{
-						//allowed to overwrite existing policies
-						mapXPolicy.put(policy.getName(), policy);
-						return policy;
-					}
+					//allowed to overwrite existing policies
+					mapXPolicy.put(policy.getName(), policy);
+					return policy;
 				}
 			}
 		}
@@ -400,7 +386,7 @@ public class NffgPolicyService {
 	
 	
 	//TODO: manage policy not existing or nffg not existing
-	public XPolicies addXPolicies(XPolicies xpolicies,Boolean overwrite) {
+	public XPolicies addXPolicies(XPolicies xpolicies) {
 		synchronized(mapXNffg){
 			synchronized(mapXPolicy){
 				
@@ -415,20 +401,7 @@ public class NffgPolicyService {
 						}
 					});		
 					
-					//if you can't overwrite the policy, verify no policies are alreaddy existing
-					if(!overwrite){
-						System.out.println("Not Overwriting Policies");
-						xpolicies.getPolicy().forEach(p->{
-							if(mapXPolicy.containsKey(p.getName())){
-								System.out.println("At least one policy in the set is already existing");
-								throw new ForbiddenException("At least one policy in the set is already existing",Response.status(403).entity("At least one policy in the set is already existing").build());
-							}
-						});
-					}
-					else{
-						System.out.println("Overwriting Policies");
-
-					}
+					
 					List<XPolicy> list = returnedXPolicies.getPolicy();
 					xpolicies.getPolicy().forEach(p->{
 						//sometimes the verification can be totally empty
@@ -439,7 +412,7 @@ public class NffgPolicyService {
 						else if(p.getVerification().getVerificationTime()==null){
 							p.setVerification(null);
 						}
-						list.add(addXPolicyVerifyXNffg(p,overwrite));
+						list.add(addXPolicyVerifyXNffg(p));
 					});
 					
 					return returnedXPolicies;

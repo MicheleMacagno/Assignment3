@@ -93,18 +93,9 @@ public class NffgPolicyWS {
 	@ApiOperation(	value = "Create a new Policy", notes = "xml format required")
 	@Produces(MediaType.APPLICATION_XML)
 	@Consumes(MediaType.APPLICATION_XML)
-	public Response storePolicyByName(@DefaultValue("y") @QueryParam("overwrite") String overwrite,
-										@Context UriInfo uriInfo,XPolicy xpolicy) throws BadRequestException, ForbiddenException{
+	public Response storePolicyByName(@Context UriInfo uriInfo,XPolicy xpolicy) throws BadRequestException, ForbiddenException{
 		XPolicy rxpolicy=null;
-		if(overwrite.equals("y")){
-			rxpolicy = nps.addXPolicyVerifyXNffg(xpolicy,true);
-		}
-		else if(overwrite.equals("n")){
-			rxpolicy = nps.addXPolicyVerifyXNffg(xpolicy,false);
-		}else{
-			throw new ForbiddenException("Parameter overwrite can be y or n, or can be avoided. No other values are accepted.",
-					Response.status(403).entity("Parameter overwrite can be y or n, or can be avoided. No other values are accepted.").build());
-		}
+		rxpolicy = nps.addXPolicyVerifyXNffg(xpolicy);
 		URI uri = uriInfo.getAbsolutePathBuilder().path(rxpolicy.getName()).build();
 		return Response.created(uri).entity(of.createPolicy(rxpolicy)).build();
 	}
@@ -136,22 +127,9 @@ public class NffgPolicyWS {
 	@ApiOperation(	value = "Create new set of policies", notes = "xml format required")
 	@Produces(MediaType.APPLICATION_XML)
 	@Consumes(MediaType.APPLICATION_XML)
-	public Response storePolicies(
-								XPolicies xpolicies,
-								@DefaultValue("y") @QueryParam("overwrite") String overwrite) throws ForbiddenException,NotFoundException,Exception {
+	public Response storePolicies(XPolicies xpolicies) throws ForbiddenException,NotFoundException,Exception {
 		XPolicies rxpolicies=null;
-		if(overwrite.equals("y")){
-			System.out.println("Overwriting Policies");
-			rxpolicies = nps.addXPolicies(xpolicies,true);
-		}
-		else if(overwrite.equals("n")){
-			System.out.println("Not Overwriting Policies");
-			rxpolicies = nps.addXPolicies(xpolicies,false);
-		}
-		else{
-			throw new NotAllowedException("The parameter overwrite can be only y or n",
-					Response.status(405).entity("The parameter overwrite can be only y or n").build());
-		}
+		rxpolicies = nps.addXPolicies(xpolicies);
 			
 		return Response.status(201).entity(of.createPolicies(rxpolicies)).build();
 		
