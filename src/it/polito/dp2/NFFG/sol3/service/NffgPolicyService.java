@@ -34,8 +34,11 @@ import it.polito.dp2.NFFG.sol3.bindings.*;
 public class NffgPolicyService {
 	private static ConcurrentHashMap<String,XNffg> mapXNffg = new ConcurrentHashMap<String,XNffg>();
 	private static ConcurrentHashMap<String,XPolicy> mapXPolicy = new ConcurrentHashMap<String,XPolicy>();
-//	private static ConcurrentHashMap<String,String> mapNameNodesNeo  = new ConcurrentHashMap<String,String>();
-//	private static ConcurrentHashMap<String,String> mapNameNodesNeoNffg  = new ConcurrentHashMap<String,String>();
+	private static ConcurrentHashMap<String,String> mapNameNffgMasterNodesNeo  = new ConcurrentHashMap<String,String>();
+	
+	//Map Indexed Via NffgName -> Retrieves a Map of NodesName/ Neo4J id
+	//		retrieved map.get(NodeName) -> Neo4J id
+	// Useful because different Nffgs can have the same NodeName
 	private static ConcurrentHashMap<String,ConcurrentHashMap<String,String>> mapNffgNodesNffg = new ConcurrentHashMap<String,ConcurrentHashMap<String,String>>();
 	
 	private String baseServiceUrlneo;
@@ -119,18 +122,17 @@ public class NffgPolicyService {
 	/**
 	 * Method receiving an XNffg and storing it in the Database.
 	 * Manages the insert into neo4j
-	 * @param nffg
+	 * @param Xnffg nffg : the element to be inserted in the database
 	 * @return
-	 * true:  successful creation
-	 * false: creation failed
+	 * XNffg element: with up to date information (i.e. Last Update Time)
+	 * Throws Exceptions on failures
 	 */
 	public XNffg addXNffg(XNffg nffg){
 		//at the end of the procedure it is inserted in the big map, containing as Key the name of Nfg, and as content the set of Nodes (with
 		//relative Neo4J Id of Nodes
 		ConcurrentHashMap<String,String> tmpMapNameNodesNeo  = new ConcurrentHashMap<String,String>();
 //TODO: verify still useful
-		ConcurrentHashMap<String,String> tmpMapNameNodesNeoNffg  = new ConcurrentHashMap<String,String>();
-		String nffgNodeId;
+		String nffgNodeId; //contains the id received from neo4j after creating the NffgNode - NffgNode / Neo4J id
 		
 		
 		synchronized(mapXNffg){
@@ -145,13 +147,15 @@ public class NffgPolicyService {
 					//neo4j
 					List<Node> listNode = new LinkedList<Node>();
 					
-					
+		//NODES			
 					//nodes of nffg to insert into neo4j
 					for(XNode n : nffg.getNodes().getNode()){
 						logger.log(Level.INFO,"Node " + n.getName() + " TO ADD");
+						
+						//prepare Node to add to Neo4J service
 						Node node = new Node();
 						Property nodeProperty = new Property();
-						//
+						
 						nodeProperty.setName("name");
 						nodeProperty.setValue(n.getName());
 						node.getProperty().add(nodeProperty);
@@ -159,16 +163,16 @@ public class NffgPolicyService {
 						
 						Node response=null;
 						
-						//add node in neo4j service
 						try{
+								//POST add node in neo4j service
 								String resourceName = baseServiceUrlneo + "resource/node/";
 								response = client.target(resourceName)
 										.request(MediaType.APPLICATION_XML)
 										.accept(MediaType.APPLICATION_XML)
 										.post(Entity.xml(node),Node.class);
-								logger.log(Level.INFO,"Response of server: \t" + response.getId() + response.getProperty().get(0).getValue());
-								//create a mapping between name and id of nodes stored in the neo4j service
-								logger.log(Level.INFO,"Node " + n.getName() + " added");
+								logger.log(Level.INFO,"Response of server: \t" + response.getId() + response.getProperty().get(0).getValue()
+										+"\n Node " + n.getName() + " added");
+								//Insert in the map Node Name, Id of Neo4J
 								tmpMapNameNodesNeo.put(response.getProperty().get(0).getValue(),response.id); 
 								listNode.add(response);//to create link with nffg node
 								
@@ -184,7 +188,8 @@ public class NffgPolicyService {
 	//--NFFG NODE
 					
 					//ADDED assigment 3
-					//manegement of NFFG master node
+					
+					//Neo4J - manegement of NFFG master node
 					Node nodeNffg = new Node();
 					Property nodeNffgProperty = new Property();
 					nodeNffgProperty.setName("name");
@@ -200,19 +205,20 @@ public class NffgPolicyService {
 								.accept(MediaType.APPLICATION_XML)
 								.post(Entity.xml(nodeNffg),Node.class);
 						logger.log(Level.INFO,"Created node of nffg - Response of server: \t" + response.getId() + "\t" + response.getProperty().get(0).getValue());
+						
+						//Id assigned by Neo4J to The Nffg Node
 						nffgNodeId=response.getId();
 	//LABELS
-						//Create labels for Neo4j
+						//Create labels for Nffg Node - for Neo4j 
 						Labels lbl = new Labels();
 						lbl.value= new LinkedList<String>();
 						lbl.value.add(new String("NFFG"));
 						resourceName = baseServiceUrlneo + "resource/node/"+response.id+"/label";
+						
+						//POST the label of Nffg Node
 						client.target(resourceName)
 								.request(MediaType.APPLICATION_XML)
 								.post(Entity.xml(lbl));
-						
-						//create a mapping between name and id of nodes stored in the neo4j service - special map for nffg
-						tmpMapNameNodesNeoNffg.put(response.getProperty().get(0).getValue(),response.id); 
 				
 					}catch(Exception e){
 						logger.log(Level.SEVERE,"Something was wrong while contacting neo4j to create the nffg node");
@@ -223,7 +229,9 @@ public class NffgPolicyService {
 					}
 	
 					
-					//RELATIONSHIPS - LINKS
+	//Neo4j RELATIONSHIPS - LINKS
+					
+					//for each Link in the received data I create a Relationship in Neo4J
 					for(XLink l : nffg.getLinks().getLink()){
 						String srcId = tmpMapNameNodesNeo.get(l.getSrc());
 						String dstId = tmpMapNameNodesNeo.get(l.getDst());
@@ -238,6 +246,7 @@ public class NffgPolicyService {
 						
 						String requestString = baseServiceUrlneo + "resource/node/" + srcId +"/relationship";
 						try{
+							//POST - Create a relationship in Neo4J
 							Relationship returnedRelationship =
 									client.target(requestString)
 									.request(MediaType.APPLICATION_XML)
@@ -255,15 +264,15 @@ public class NffgPolicyService {
 					}
 				
 					
-					//RELATIONSHIPS of NFFG node to define connection to Nffg Node
+	//Neo4J - RELATIONSHIPS of NFFG node to define connection to Nffg Node
 					for(Node n : listNode){
-						String srcId = tmpMapNameNodesNeoNffg.get(nffg.getName());
+						String srcId = nffgNodeId;
 						logger.log(Level.INFO,"NDFFG ID: " + srcId + nffg.getName() );
 						String dstId = n.getId();
 						logger.log(Level.INFO,"Node ID: " + dstId + n.getProperty().get(0).getValue() );
 						
 					
-						//prepare relationship for POST
+						//prepare RELATIONSHIP for POST
 						Relationship relationship = new Relationship();
 						relationship.setDstNode(dstId);
 						relationship.setSrcNode(srcId);
@@ -273,6 +282,7 @@ public class NffgPolicyService {
 						
 						String requestString = baseServiceUrlneo + "resource/node/" + srcId +"/relationship";
 						try{
+							//POST - create a Relationship for Nffg Node
 							Relationship returnedRelationship =
 									client.target(requestString)
 									.request(MediaType.APPLICATION_XML)
@@ -288,15 +298,16 @@ public class NffgPolicyService {
 						}
 					}
 					
-				mapXNffg.put(nffg.getName(), nffg);
 				
 				//Modification exploited in order to be more robust with respect to errors occurred while contacting Neo4j
 				//No incoherence of data if some errors occurs.
 				//Only the effectively registered nodes have been inserted in the maps
-
-//TODO: fixing this activity
+				
+				//CONSISTENCY of Data: only in case of success data is stored
+					
+				mapXNffg.put(nffg.getName(), nffg);
 				mapNffgNodesNffg.put(nffg.getName(), tmpMapNameNodesNeo);
-//				
+				mapNameNffgMasterNodesNeo.put(nffg.getName(), nffgNodeId);
 				
 				logger.log(Level.INFO,"Nffg corretly inserted in the map");
 				return nffg;
@@ -383,14 +394,8 @@ public class NffgPolicyService {
 						return policy;
 					}
 				}
-				
-				
-				
-				
-				
 			}
 		}
-			
 	}
 	
 	
