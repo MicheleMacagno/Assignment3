@@ -16,9 +16,15 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
+
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
+
+//Looger libraries
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 import it.polito.dp2.NFFG.sol3.bindings.*;
@@ -34,12 +40,15 @@ public class NffgPolicyService {
 	
 	private String baseServiceUrlneo;
 	private Client client=null;
+	private Logger logger;
 	
 //TODO: change to 8080	
 	public NffgPolicyService(){
+		logger = Logger.getLogger(NffgPolicyService.class.getName());;
+		
 		baseServiceUrlneo=System.getProperty("it.polito.dp2.NFFG.lab3.NEO4JURL");
 		if(baseServiceUrlneo==null){
-			System.out.println("URL of neo4j - system property is not set");;
+			logger.log(Level.INFO, "URL of neo4j - system property is not set");
 			baseServiceUrlneo="http://localhost:8081/Neo4JXML/rest/";
 		}
 		
@@ -49,11 +58,12 @@ public class NffgPolicyService {
 		}
 		
 		//create a client for each different connection to the system
-		System.out.println(baseServiceUrlneo);
+		logger.log(Level.INFO,baseServiceUrlneo);
 		try{
 			client = ClientBuilder.newClient();
 		}catch(Exception e){
-			e.printStackTrace();
+			logger.log(Level.SEVERE,e.getMessage(),e);
+			 
 		}
 	}
 	
@@ -63,7 +73,7 @@ public class NffgPolicyService {
 				return mapXNffg.get(name);
 			}
 			else{
-				System.out.println("Nffg not found in the database");
+				logger.log(Level.WARNING,"Nffg not found in the database");
 				throw new NotFoundException("Nffg not found in the database",Response.status(404).entity("Nffg not found in the database").build());
 			}
 		}
@@ -91,7 +101,7 @@ public class NffgPolicyService {
 			//at least one nffg is already existing
 			xnffgs.getNffg().forEach(n->{
 				if(mapXNffg.containsKey(n.getName())){
-					System.out.println("At least one of the Nffg in the set is already existing");
+					logger.log(Level.WARNING,"At least one of the Nffg in the set is already existing");
 					throw new ForbiddenException("At least one of the Nffg in the set is already existing",Response.status(403).entity("At least one of the Nffg in the set is already existing").build());
 				}
 			});
@@ -120,6 +130,8 @@ public class NffgPolicyService {
 		ConcurrentHashMap<String,String> tmpMapNameNodesNeo  = new ConcurrentHashMap<String,String>();
 //TODO: verify still useful
 		ConcurrentHashMap<String,String> tmpMapNameNodesNeoNffg  = new ConcurrentHashMap<String,String>();
+		String nffgNodeId;
+		
 		
 		synchronized(mapXNffg){
 				if(!mapXNffg.containsKey(nffg.getName())){	
@@ -136,7 +148,7 @@ public class NffgPolicyService {
 					
 					//nodes of nffg to insert into neo4j
 					for(XNode n : nffg.getNodes().getNode()){
-						System.out.println("Node " + n.getName() + " TO ADD");
+						logger.log(Level.INFO,"Node " + n.getName() + " TO ADD");
 						Node node = new Node();
 						Property nodeProperty = new Property();
 						//
@@ -154,19 +166,16 @@ public class NffgPolicyService {
 										.request(MediaType.APPLICATION_XML)
 										.accept(MediaType.APPLICATION_XML)
 										.post(Entity.xml(node),Node.class);
-								System.out.println("Response of server: \t" + response.getId() + response.getProperty().get(0).getValue());
+								logger.log(Level.INFO,"Response of server: \t" + response.getId() + response.getProperty().get(0).getValue());
 								//create a mapping between name and id of nodes stored in the neo4j service
-								System.out.println("Node " + n.getName() + " added");
+								logger.log(Level.INFO,"Node " + n.getName() + " added");
 								tmpMapNameNodesNeo.put(response.getProperty().get(0).getValue(),response.id); 
 								listNode.add(response);//to create link with nffg node
 								
 								
 						}catch(Exception e){
-							System.out.println("Something was wrong while contacting neo4j to insert a node");
-							e.printStackTrace();
-							//TODO verify it
-	//TODO: ROLLBACK OF ALREADY INSERTED NODES IN NEO4J						
-							//TODO: manage deletion of the node from the map
+							logger.log(Level.SEVERE,"Something was wrong while contacting neo4j to insert a node. End");
+							logger.log(Level.SEVERE, e.getMessage(),e);
 							throw new InternalServerErrorException("Something was wrong while contacting neo4j to insert a node",
 									Response.status(500).entity("Something was wrong while contacting neo4j to insert a node").build());
 						}
@@ -190,8 +199,8 @@ public class NffgPolicyService {
 								.request(MediaType.APPLICATION_XML)
 								.accept(MediaType.APPLICATION_XML)
 								.post(Entity.xml(nodeNffg),Node.class);
-						System.out.println("Created node of nffg - Response of server: \n" + response.getId() + response.getProperty().get(0).getValue());
-						
+						logger.log(Level.INFO,"Created node of nffg - Response of server: \t" + response.getId() + "\t" + response.getProperty().get(0).getValue());
+						nffgNodeId=response.getId();
 	//LABELS
 						//Create labels for Neo4j
 						Labels lbl = new Labels();
@@ -206,18 +215,15 @@ public class NffgPolicyService {
 						tmpMapNameNodesNeoNffg.put(response.getProperty().get(0).getValue(),response.id); 
 				
 					}catch(Exception e){
-						System.out.println("Something was wrong while contacting neo4j to create the nffg node");
-						e.printStackTrace();
-						//TODO verify it
-						
-						//TODO: manage deletion of the node from the map
-	//TODO: delete all the nodes from the map, including labels and master node
+						logger.log(Level.SEVERE,"Something was wrong while contacting neo4j to create the nffg node");
+						logger.log(Level.SEVERE,e.getMessage(),e);
+						 
 						throw new InternalServerErrorException("Something was wrong while contacting neo4j to create the nffg node",
 								Response.status(500).entity("Something was wrong while contacting neo4j to create the nffg node").build());
 					}
 	
 					
-	//RELATIONSHIPS - LINKS
+					//RELATIONSHIPS - LINKS
 					for(XLink l : nffg.getLinks().getLink()){
 						String srcId = tmpMapNameNodesNeo.get(l.getSrc());
 						String dstId = tmpMapNameNodesNeo.get(l.getDst());
@@ -238,14 +244,10 @@ public class NffgPolicyService {
 									.accept(MediaType.APPLICATION_XML)
 									.post(Entity.xml(relationship),Relationship.class);
 							
-							System.out.println("Returned Relationship: " + returnedRelationship.getId() + " " + returnedRelationship.getSrcNode() + " " + returnedRelationship.getDstNode() + " " + returnedRelationship.getType());
+							logger.log(Level.INFO,"Returned Relationship: " + returnedRelationship.getId() + " " + returnedRelationship.getSrcNode() + " " + returnedRelationship.getDstNode() + " " + returnedRelationship.getType());
 						}catch(Exception e){
-							System.out.println("Error in creating the relationship");
-							System.out.println("Something was wrong while contacting neo4j to create relationship");
-							e.printStackTrace();
-							
-							//TODO: manage deletion of the node from the map
-	
+							logger.log(Level.SEVERE,"Error in creating the relationship\nSomething was wrong while contacting neo4j to create relationship");
+							logger.log(Level.SEVERE,e.getMessage(),e);
 							throw new InternalServerErrorException("Something was wrong while contacting neo4j  to create relationship",
 									Response.status(500).entity("Something was wrong while contacting neo4j  to create relationship").build());
 						}
@@ -256,9 +258,9 @@ public class NffgPolicyService {
 					//RELATIONSHIPS of NFFG node to define connection to Nffg Node
 					for(Node n : listNode){
 						String srcId = tmpMapNameNodesNeoNffg.get(nffg.getName());
-						System.out.println("NDFFG ID: " + srcId + nffg.getName() );
+						logger.log(Level.INFO,"NDFFG ID: " + srcId + nffg.getName() );
 						String dstId = n.getId();
-						System.out.println("Node ID: " + dstId + n.getProperty().get(0).getValue() );
+						logger.log(Level.INFO,"Node ID: " + dstId + n.getProperty().get(0).getValue() );
 						
 					
 						//prepare relationship for POST
@@ -277,11 +279,10 @@ public class NffgPolicyService {
 									.accept(MediaType.APPLICATION_XML)
 									.post(Entity.xml(relationship),Relationship.class);
 							
-							System.out.println("Created link of nffg - Returned Relationship: " + returnedRelationship.getId() + " " + returnedRelationship.getSrcNode() + " " + returnedRelationship.getDstNode() + " " + returnedRelationship.getType());
+							logger.log(Level.INFO,"Created link of nffg - Returned Relationship: " + returnedRelationship.getId() + " " + returnedRelationship.getSrcNode() + " " + returnedRelationship.getDstNode() + " " + returnedRelationship.getType());
 						}catch(Exception e){
-							System.out.println("Error in creating the relationship");
-							System.out.println("Something was wrong while contacting neo4j to create relationship for the nffg");
-							e.printStackTrace();
+							logger.log(Level.SEVERE,"Error in creating the relationship\nSomething was wrong while contacting neo4j to create relationship for the nffg");
+							logger.log(Level.SEVERE,e.getMessage(),e);
 							throw new InternalServerErrorException("Something was wrong while contacting neo4j  to create relationship for the nffg",
 									Response.status(500).entity("Something was wrong while contacting neo4j  to create relationship for the nffg").build());
 						}
@@ -291,23 +292,17 @@ public class NffgPolicyService {
 				
 				//Modification exploited in order to be more robust with respect to errors occurred while contacting Neo4j
 				//No incoherence of data if some errors occurs.
-				//Only the effectivly registered nodes have been inserted in the maps
+				//Only the effectively registered nodes have been inserted in the maps
 
 //TODO: fixing this activity
 				mapNffgNodesNffg.put(nffg.getName(), tmpMapNameNodesNeo);
-//				tmpMapNameNodesNeo.entrySet().stream().forEach(n->{
-//					mapNameNodesNeo.put(n.getKey(),n.getValue());
-//				});
+//				
 				
-//				tmpMapNameNodesNeoNffg.entrySet().stream().forEach(n->{
-//					mapNameNodesNeoNffg.put(n.getKey(), n.getValue());
-//				});
-				
-				System.out.println("Nffg corretly inserted in the map");
+				logger.log(Level.INFO,"Nffg corretly inserted in the map");
 				return nffg;
 			}
 			else{
-				System.out.println("Error - Nffg name already existing - Please submit a Nffg with a different name ");
+				logger.log(Level.WARNING,"Error - Nffg name already existing - Please submit a Nffg with a different name ");
 				throw new ForbiddenException("Error - Nffg name already existing - Please submit a Nffg with a different name ",Response.status(403).entity("Error - Nffg name already existing").build());
 			}
 		}
@@ -366,7 +361,7 @@ public class NffgPolicyService {
 				
 				
 				if(!mapXNffg.containsKey(policy.getNffg())){
-					System.out.println("Error - Nffg not existing");
+					logger.log(Level.WARNING,"Error - Nffg not existing");
 					throw new NotFoundException("Error - Nffg name not existing",Response.status(403).entity("Error - Nffg name not existing").build());
 				}
 				else{
@@ -377,7 +372,7 @@ public class NffgPolicyService {
 							return policy;
 						}
 						else{
-							System.out.println("Error - Policy already existing");
+							logger.log(Level.WARNING,"Error - Policy already existing");
 							throw new ForbiddenException("Error - Policy already existing. Cannot overwrite it",Response.status(403).entity("Error - Policy already existing. Cannot overwrite it").build());
 							
 						}
@@ -410,7 +405,7 @@ public class NffgPolicyService {
 					//verify if the Nffg related to the policies are really existing
 					xpolicies.getPolicy().forEach(p->{
 						if(!mapXNffg.containsKey(p.getNffg())){
-							System.out.println("The nffg corresponding to the policy is not existing");
+							logger.log(Level.WARNING,"The nffg corresponding to the policy is not existing");
 							throw new NotFoundException("The nffg corresponding to the policy is not existing",Response.status(404).entity("The nffg corresponding to the policy is not existing").build());
 						}
 					});		
@@ -444,7 +439,8 @@ public class NffgPolicyService {
 					
 					return returnedXPolicies;
 				}catch(NullPointerException e){
-					e.printStackTrace();
+					logger.log(Level.SEVERE,e.getMessage(),e);
+					 
 					throw new NotFoundException("NullPointerException",Response.status(404).entity("Error- null found").build());
 				}
 				
@@ -511,16 +507,16 @@ public class NffgPolicyService {
 		synchronized(mapXPolicy){
 			//debug-------------------------------------
 				mapNffgNodesNffg.keySet().stream().forEach(m->{
-					System.out.println("NFFG: " + m + "\t--------------------------" );
+					logger.log(Level.INFO,"NFFG: " + m + "\t--------------------------" );
 					mapNffgNodesNffg.get(m).keySet().stream().forEach(e->{
-						System.out.println("\tNode: " + e + "\t" +mapNffgNodesNffg.get(m).get(e));
+						logger.log(Level.INFO,"\tNode: " + e + "\t" +mapNffgNodesNffg.get(m).get(e));
 					});
 				});
 			
-			//--end of debug
+			//--------------------------------------------end of debug
 			if(xpolicy==null){
 				
-				System.out.println("--Error impossible to find the policy in the database");
+				logger.log(Level.WARNING,"--Error impossible to find the policy in the database");
 				throw new NotFoundException("Unable to find the policy to validate",
 						Response.status(404).entity("Unable to find the policy to validate").build());
 			}
@@ -532,14 +528,14 @@ public class NffgPolicyService {
 				+"/paths?dst="
 				+mapNffgNodesNffg.get(xpolicy.getNffg()).get(xpolicy.getDst()); //id of dst node of nffg relative to the policy
 				
-				System.out.println(resourceName);
+				logger.log(Level.INFO,resourceName);
 				
 				Paths paths = client.target(resourceName)
 						.request(MediaType.APPLICATION_XML)
 						.accept(MediaType.APPLICATION_XML)
 						.get(Paths.class);
 			
-				System.out.println("Found n paths: " + paths.getPath().size());
+				logger.log(Level.INFO,"Found n paths: " + paths.getPath().size());
 				
 				XVerification xv = new XVerification();
 				if(paths.getPath().size()==0){
@@ -559,8 +555,9 @@ public class NffgPolicyService {
 				
 				xpolicy.setVerification(xv);
 			}catch(Exception e){
-				e.printStackTrace();
-				System.out.println("Error in retrieving the paths" + e.getMessage());
+				 
+				logger.log(Level.SEVERE,"Error in retrieving the paths" + e.getMessage());
+				logger.log(Level.SEVERE,e.getMessage(),e);
 				throw new InternalServerErrorException("Internal Server Error - Error in retrieving the paths",
 						Response.status(500).entity("Internal Server Error - Error in retrieving the paths!\nProblems while contacting neo4J").build());
 			}
@@ -582,8 +579,9 @@ public class NffgPolicyService {
 		try {
 			date2 = DatatypeFactory.newInstance().newXMLGregorianCalendar(c);
 		} catch (DatatypeConfigurationException e) {
-			System.out.println("Error in converting data type");
-			e.printStackTrace();
+			logger.log(Level.SEVERE,"Error in converting data type");
+			logger.log(Level.SEVERE,e.getMessage(),e);
+			 
 		}
 		return date2;
 	}
