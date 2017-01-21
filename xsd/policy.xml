@@ -1,10 +1,13 @@
 <?xml version="1.0"?>
-<policy xmlns:xsd="http://www.w3.org/2001/XMLSchema-instance"
-	xsd:noNamespaceSchemaLocation="nffgVerifier.xsd"   nffg="policy1">
+<policy 
+
+	xmlns="http://www.example.org/nffgVerifier" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:schemaLocation="http://www.example.org/nffgVerifier nffgVerifier.xsd " nffg="policy1">
 			<name>PolicyTraversal1</name>
 			<positivity>true</positivity>
-			<src>nodos1</src>
-			<dst>nodoprova1</dst>
+			<src>nodo1</src>
+			<dst>nodo2</dst>
 			<traversal>
 				<functionality>DPI</functionality>
 			</traversal>

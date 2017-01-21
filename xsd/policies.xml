@@ -1,11 +1,13 @@
 <?xml version="1.0"?>
-<policies xmlns:xsd="http://www.w3.org/2001/XMLSchema-instance"
-	xsd:noNamespaceSchemaLocation="nffgVerifier.xsd">
+<policies 	
+	xmlns="http://www.example.org/nffgVerifier" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:schemaLocation="http://www.example.org/nffgVerifier nffgVerifier.xsd ">
 		<policy nffg="nffg1">
 			<name>policy1</name>
 			<positivity>true</positivity>
-			<src>nodopluto1</src>
-			<dst>nodos1</dst>
+			<src>nodo1</src>
+			<dst>nodo2</dst>
 			<verification>
 				<verificationTime>2016-07-21T21:00:00.000+02:00</verificationTime>
 				<result>true</result>

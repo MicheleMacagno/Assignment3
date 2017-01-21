@@ -1,6 +1,8 @@
-<?xml version="1.0"?>
-<nffgs xmlns:xsd="http://www.w3.org/2001/XMLSchema-instance"
-	xsd:noNamespaceSchemaLocation="nffgVerifier.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<nffgs 
+	xmlns="http://www.example.org/nffgVerifier" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:schemaLocation="http://www.example.org/nffgVerifier nffgVerifier.xsd ">
 
 
 	<nffg>
@@ -8,87 +10,92 @@
 		<lastUpdate>2015-07-21T21:00:00.000+02:00</lastUpdate>
 	<nodes>
 		<node>
-			<name>nodos1</name>
+			<name>nodo1</name>
+			<functionality>FW</functionality>
+		</node>
+		
+		<node>
+			<name>nodo2</name>
 			<functionality>FW</functionality>
 		</node>
 
 		<node>
-			<name>nododst1</name>
+			<name>nodo3</name>
 			<functionality>NAT</functionality>
 		</node>
 
 		<node>
-			<name>nodoprova1</name>
+			<name>nodo4</name>
 			<functionality>DPI</functionality>
 		</node>
 
 		<node>
-			<name>nodopluto1</name>
+			<name>nodo5</name>
 			<functionality>DPI</functionality>
 		</node>
 
 		<node>
-			<name>nodopluto11</name>
+			<name>nodo6</name>
 			<functionality>DPI</functionality>
 		</node>
 	</nodes>
 	<links>
 		<link>
 			<name>link1</name>
-			<src>nodos1</src>
-			<dst>nodopluto1</dst>
+			<src>nodo1</src>
+			<dst>nodo2</dst>
 		</link>
 
 		<link>
 			<name>link2</name>
-			<src>nodos1</src>
-			<dst>nododst1</dst>
+			<src>nodo1</src>
+			<dst>nodo3</dst>
 		</link>
 	</links>
 	
 	</nffg>
 
 	<nffg>
-		<name>pluto2</name>
+		<name>nffg2</name>
 		<lastUpdate>2015-07-21T21:00:00.000+02:00</lastUpdate>
 	<nodes>
 	
 		<node>
-			<name>nodos2</name>
+			<name>nodo1</name>
 			<functionality>FW</functionality>
 		</node>
 
 		<node>
-			<name>nododst2</name>
+			<name>nodo2</name>
 			<functionality>NAT</functionality>
 		</node>
 
 		<node>
-			<name>nodoprova2</name>
+			<name>nodo3</name>
 			<functionality>DPI</functionality>
 		</node>
 
 		<node>
-			<name>nodopluto2</name>
+			<name>nodo4</name>
 			<functionality>DPI</functionality>
 		</node>
 
 		<node>
-			<name>nodopluto22</name>
+			<name>nodo5</name>
 			<functionality>DPI</functionality>
 		</node>
 	</nodes>
 	<links>
 		<link>
-			<name>link2</name>
-			<src>nodos2</src>
-			<dst>nodopluto2</dst>
+			<name>link1</name>
+			<src>nodo1</src>
+			<dst>nodo5</dst>
 		</link>
 
 		<link>
-			<name>link22</name>
-			<src>nodos2</src>
-			<dst>nododst2</dst>
+			<name>link2</name>
+			<src>nodo2</src>
+			<dst>nodo3</dst>
 		</link>
 	</links>
 
