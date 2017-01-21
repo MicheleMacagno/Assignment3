@@ -135,7 +135,6 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 		XNffgs response=null;
 		//verify there are no duplicated nffgs in the system
 		
-		ObjectFactory of = new ObjectFactory();
 		XNffgs xnffgs = of.createXNffgs();
 		for(NffgReader nr : nffgsToAdd){
 			XNffg xnffg = this.prepareXNffg(nr);
@@ -215,6 +214,9 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 			case ReturnStatus.NOT_FOUND:
 				throw new ServiceException(ReturnStatus.NOT_FOUND +" - Error - Nffg referring to the policy is not existing");
 			
+			case ReturnStatus.FORBIDDEN:
+				throw new  ServiceException(e.getResponse().getStatus()+" - Error - Node Not Existing" +e.getMessage());
+				
 			case ReturnStatus.NOT_ALLOWED:
 				throw new ServiceException(ReturnStatus.NOT_ALLOWED +" Error - Wrong query url! Use ?overwrite=y");
 			
@@ -233,6 +235,19 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 
 	@Override
 	public void loadReachabilityPolicy(String name, String nffgName, boolean isPositive, String srcNodeName,String dstNodeName) throws UnknownNameException, ServiceException {
+		
+		
+		//Local verification of nffg name and nodes to throw eventually an exception
+		if(monitor.getNffg(nffgName)==null){
+			System.out.println("Error - The Nffg the policy refers to is not existing");
+			throw new UnknownNameException("Error - The Nffg the policy refers to is not existing");
+		}else{
+			if(monitor.getNffg(nffgName).getNode(srcNodeName)==null || 
+					monitor.getNffg(nffgName).getNode(dstNodeName)==null){
+				System.out.println("Error - At least one node the policy refers to it is not existing in the Nffg!");
+				throw new UnknownNameException("Error - At least one node the policy refers to it is not existing in the Nffg!");
+			}
+		}
 		
 		XPolicy xpolicy = of.createXPolicy();
 		xpolicy.setName(name);
@@ -259,10 +274,8 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 				System.out.println(e.getMessage());
 				throw new UnknownNameException(ReturnStatus.NOT_FOUND+ " - Error - Nffg referring to the policy is not existing");
 			case ReturnStatus.FORBIDDEN:
-				//this case can't occur in this program, because the client is set up in order to always overwrite existing policies.
-				//It is added to respect the description of web service I created for assignment1.
 				System.out.println(e.getMessage());
-				throw new ServiceException(e.getMessage());
+				throw new UnknownNameException(e.getResponse().getStatus() + " - Error - A node of the policy refers to is not existing");
 			
 			case ReturnStatus.INTERNAL_SERVER_ERROR:
 				throw new  ServiceException(e.getResponse().getStatus()+" - Error " +e.getMessage());
@@ -341,13 +354,8 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 			System.out.println(e.getMessage());
 			throw new ServiceException("Error - Policy unexpected error during deletion of the policy");
 		}
-//TODO: verify it is really necessary		
-
-//		if(response.getTraversal()!=null){
-//			System.out.println("Error - The policy is a Traversal one, not a reachability one!!");
-//			throw new ServiceException("Error - The policy is a Traversal one, not a reachability one!! - can't be verified");
-//		}
 		
+		//accept also traversal policies
 		return response.getVerification().isResult();
 	}
 	
@@ -407,8 +415,8 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
     }
 	
 	/*
-	 * Method used to prepare a Nffg to send it to the web service.
-	 * Used by mane methods
+	 * Method used to prepare a xNffg to send it to the web service.
+	 * Used by many methods
 	 */
 	private XNffg prepareXNffg(NffgReader nr){
 		XNffg xnffg = new XNffg();
@@ -447,7 +455,6 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 	 * Used by mane methods
 	 */
 	private XPolicy prepareXPolicy(PolicyReader pr) throws Exception{
-		ObjectFactory of = new ObjectFactory();
 		XPolicy xpolicy = of.createXPolicy();
 		xpolicy.setName(pr.getName());
 		xpolicy.setNffg(pr.getNffg().getName());

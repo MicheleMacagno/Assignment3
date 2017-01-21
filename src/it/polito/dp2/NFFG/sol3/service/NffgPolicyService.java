@@ -25,7 +25,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
 //Looger libraries
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
+import java.util.stream.Collectors;
 
 import it.polito.dp2.NFFG.sol3.bindings.*;
 
@@ -95,7 +95,7 @@ public class NffgPolicyService {
 		return returnXNffgs;
 	}
 	
-	public XNffgs addXNffgs(XNffgs xnffgs,UriInfo uriInfo) throws ForbiddenException{
+	public XNffgs addXNffgs(XNffgs xnffgs,UriInfo uriInfo) throws ForbiddenException,InternalServerErrorException{
 		
 		XNffgs returnedXNffgs = new XNffgs();
 		
@@ -108,8 +108,8 @@ public class NffgPolicyService {
 			xnffgs.getNffg().forEach(n->{
 				if(mapXNffg.containsKey(n.getName())){
 					logger.log(Level.WARNING,"At least one of the Nffg in the set is already existing");
-					throw new ForbiddenException("At least one of the Nffg in the set is already existing",
-							Response.status(403).entity("At least one of the Nffg in the set is already existing").build());
+					throw new ForbiddenException("Error 403 - At least one of the Nffg in the set is already existing",
+							Response.status(403).entity("Error 403 - At least one of the Nffg in the set is already existing").build());
 				}
 			});
 			
@@ -383,6 +383,41 @@ public class NffgPolicyService {
 							Response.status(404).entity("Error - Nffg name not existing").build());
 				}
 				else{
+					
+					//TODO:verify the existence of nodes
+					XNffg xnffg = mapXNffg.get(policy.getNffg());
+					Boolean found = false;
+					
+					//verify the existence of source node
+					for(XNode n : xnffg.getNodes().getNode()){
+						if(n.getName().equals(policy.getSrc())){
+							found=true;
+							break;
+						}
+					}
+					if(!found){
+						logger.log(Level.WARNING,"Error - Src Node of nffg is not existing");
+						throw new ForbiddenException("Error - Src Node of nffg is not existing",
+								Response.status(403).entity("Error - Src Node of nffg is not existing").build());
+					}
+					
+					//verify the existence of dstNode
+					found=false;
+					for(XNode n : xnffg.getNodes().getNode()){
+						if(n.getName().equals(policy.getDst())){
+							found=true;
+							break;
+						}
+					}
+					if(!found){
+						logger.log(Level.WARNING,"Error - Dst Node of nffg is not existing");
+						throw new ForbiddenException("Error - Dst Node of nffg is not existing",
+								Response.status(403).entity("Error - Dst Node of nffg is not existing").build());
+					}
+					
+					
+					//create officially the policy
+					
 					URI uri = uriInfo.getBaseUriBuilder().path("policy").path(policy.getName()).build();
 					policy.setHref(uri.toString());
 					//allowed to overwrite existing policies
@@ -396,7 +431,7 @@ public class NffgPolicyService {
 	
 	
 	//TODO: manage policy not existing or nffg not existing
-	public XPolicies addXPolicies(XPolicies xpolicies,UriInfo uriInfo) throws NotFoundException,InternalServerErrorException {
+	public XPolicies addXPolicies(XPolicies xpolicies,UriInfo uriInfo) throws NotFoundException,InternalServerErrorException,ForbiddenException {
 		synchronized(mapXNffg){
 			synchronized(mapXPolicy){
 				
@@ -427,6 +462,9 @@ public class NffgPolicyService {
 					});
 					
 					return returnedXPolicies;
+				}catch(ForbiddenException e){
+					logger.log(Level.WARNING, "A node is not existing", e);
+					throw e;
 				}catch(Exception e){
 					logger.log(Level.SEVERE,e.getMessage(),e);
 					 
@@ -494,11 +532,12 @@ public class NffgPolicyService {
 //TODO modify everything
 // policy and node id must come from the policy
 	public XPolicy verifyPolicy(String name){
-		XPolicy xpolicy = mapXPolicy.get(name);
-		
+		XPolicy xpolicy;
 		
 
 		synchronized(mapXPolicy){
+			xpolicy = mapXPolicy.get(name);
+
 			//debug-------------------------------------
 				mapNffgNodesNffg.keySet().stream().forEach(m->{
 					logger.log(Level.INFO,"NFFG: " + m + "\t--------------------------" );
