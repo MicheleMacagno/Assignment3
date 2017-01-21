@@ -202,7 +202,7 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 		try{
 			responseP = client.target(resourceName)
 					.request(MediaType.APPLICATION_XML)
-					.accept("application/xml")
+					.accept(MediaType.APPLICATION_XML)
 					.post(Entity.xml(of.createPolicies(xpolicies)),XPolicies.class);
 			
 //			this.printXML(null, of.createPolicies(responseP));
@@ -456,11 +456,18 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 		//policy verification data
 		XVerification xverification = new XVerification();
 		if(pr.getResult()!=null){
-			xverification.setMessage(pr.getResult().getVerificationResultMsg());
-			xverification.setVerificationTime(this.convertCalendar(pr.getResult().getVerificationTime()));
-			xverification.setResult(pr.getResult().getVerificationResult());
+			if(pr.getResult().getVerificationTime()!=null){
+				xverification.setMessage(pr.getResult().getVerificationResultMsg());
+				xverification.setVerificationTime(this.convertCalendar(pr.getResult().getVerificationTime()));
+				xverification.setResult(pr.getResult().getVerificationResult());
+				xpolicy.setVerification(xverification);
+			}else{
+				xpolicy.setVerification(null);
+			}
 		}
-		xpolicy.setVerification(xverification);
+		else{
+			xpolicy.setVerification(null);
+		}
 		
 		
 

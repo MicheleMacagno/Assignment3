@@ -21,6 +21,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+import javax.xml.bind.JAXBElement;
 
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
@@ -35,7 +36,6 @@ import it.polito.dp2.NFFG.sol3.bindings.XPolicy;
 
 @Path("/")
 public class NffgPolicyWS {
-	//TODO: fix it for concurrency
 	
 	it.polito.dp2.NFFG.sol3.bindings.ObjectFactory of = new it.polito.dp2.NFFG.sol3.bindings.ObjectFactory();
 	NffgPolicyService nps = new NffgPolicyService();
@@ -44,31 +44,29 @@ public class NffgPolicyWS {
 		
 	}
 	
-	/**
-	 * 
-	 * @param xnffg
-	 * @return Response type containing all the information about the XNffg sent.
-	 */
+	
 	@POST
 	@Path("nffg")
 	@ApiOperation(	value = "Create a new Nffg", notes = "xml format required")
 	@ApiResponses(value = {
 			@ApiResponse(code = 201, message= "Created"),
+			@ApiResponse(code = 400, message= "The body does not respect the XML schema"),
 			@ApiResponse(code = 403, message= "Nffg already existing"),
 			@ApiResponse(code = 500, message= "Internal server error")
 	})
 	@Produces(MediaType.APPLICATION_XML)
 	@Consumes(MediaType.APPLICATION_XML)
-	public Response storeNewNffgByName(@Context UriInfo uriInfo, XNffg xnffg) throws ForbiddenException, InternalServerErrorException {
+	public Response storeNewNffgByName(@Context UriInfo uriInfo, JAXBElement<XNffg> xnffg) throws ForbiddenException, InternalServerErrorException {
 		
-		XNffg rxnffg = nps.addXNffg(xnffg);
+		
+		XNffg rxnffg = nps.addXNffg(xnffg.getValue(),uriInfo);
 		URI uri = uriInfo.getAbsolutePathBuilder().path(rxnffg.getName()).build();
 		return Response.created(uri).entity(of.createNffg(rxnffg)).build();
   	}
 	
 	@GET
 	@Path("/nffg/{name: [a-zA-Z_][a-zA-Z0-9_]*}")
-	@ApiOperation( value = "Retrieve an Nffg given its name", notes="returns xml format")
+	@ApiOperation( value = "Retrieve an Nffg given its name", notes="single nffg")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message= "OK"),
 			@ApiResponse(code = 404, message= "Nffg not found"),
@@ -86,20 +84,21 @@ public class NffgPolicyWS {
 	@ApiOperation(	value = "Create new nffgs", notes = "xml format required")
 	@ApiResponses(value = {
 			@ApiResponse(code = 201, message= "Created"),
+			@ApiResponse(code = 400, message= "The body does not respect the XML schema"),
 			@ApiResponse(code = 403, message= "At least a Nffg already existing"),
 			@ApiResponse(code = 500, message= "Internal server error")
 	})
 	@Produces(MediaType.APPLICATION_XML)
 	@Consumes(MediaType.APPLICATION_XML)
-	public Response storeNffgsByName(XNffgs xnffgs) throws ForbiddenException {
+	public Response storeNffgsByName(@Context UriInfo uriInfo,JAXBElement<XNffgs> xnffgs) throws ForbiddenException {
 		
-		XNffgs rxnffgs = nps.addXNffgs(xnffgs);
+		XNffgs rxnffgs = nps.addXNffgs(xnffgs.getValue(),uriInfo);
 		return Response.status(201).entity(of.createNffgs(rxnffgs)).build();
   	}
 	
 	@GET
 	@Path("/nffgs")
-	@ApiOperation(	value = "Retrieve all nffgs", notes = "xml format returned")
+	@ApiOperation(	value = "Retrieve all nffgs", notes = "get all available nffgs")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message= "OK"),
 			@ApiResponse(code = 500, message= "Internal server error")
@@ -116,21 +115,22 @@ public class NffgPolicyWS {
 	@ApiOperation(	value = "Create a new Policy", notes = "xml format required")
 	@ApiResponses(value = {
 			@ApiResponse(code = 201, message= "Created"),
+			@ApiResponse(code = 400, message= "The body does not respect the XML schema"),
 			@ApiResponse(code = 404, message= "Nffg Not Found"),
 			@ApiResponse(code = 500, message= "Internal server error")
 	})
 	@Produces(MediaType.APPLICATION_XML)
 	@Consumes(MediaType.APPLICATION_XML)
-	public Response storePolicyByName(@Context UriInfo uriInfo,XPolicy xpolicy) throws BadRequestException, ForbiddenException{
+	public Response storePolicyByName(@Context UriInfo uriInfo,JAXBElement<XPolicy> xpolicy) throws BadRequestException, ForbiddenException{
 		XPolicy rxpolicy=null;
-		rxpolicy = nps.addXPolicyVerifyXNffg(xpolicy);
+		rxpolicy = nps.addXPolicyVerifyXNffg(xpolicy.getValue(),uriInfo);
 		URI uri = uriInfo.getAbsolutePathBuilder().path(rxpolicy.getName()).build();
 		return Response.created(uri).entity(of.createPolicy(rxpolicy)).build();
 	}
 		
 	@GET
 	@Path("policy/{name: [a-zA-Z_][a-zA-Z0-9_]*}")
-	@ApiOperation(	value = "Read an existing policy", notes = "xml format returned")
+	@ApiOperation(	value = "Read an existing policy", notes = "get a single policy")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message= "OK"),
 			@ApiResponse(code = 404, message= "Policy Not Found"),
@@ -159,20 +159,20 @@ public class NffgPolicyWS {
 		return Response.status(200).entity(of.createPolicy(rxpolicy)).build();
 	}
 	
-//TODO: verify the NOT ALLOWED exception error 405
 	@POST
 	@Path("policies")
 	@ApiOperation(	value = "Create new set of policies", notes = "xml format required")
 	@ApiResponses(value = {
 			@ApiResponse(code = 201, message= "Created"),
+			@ApiResponse(code = 400, message= "The body does not respect the XML schema"),
 			@ApiResponse(code = 404, message= "Nffg to which a policy refer is Not Found"),
 			@ApiResponse(code = 500, message= "Internal server error")
 	})
 	@Produces(MediaType.APPLICATION_XML)
 	@Consumes(MediaType.APPLICATION_XML)
-	public Response storePolicies(XPolicies xpolicies) throws ForbiddenException,NotFoundException,Exception {
+	public Response storePolicies(@Context UriInfo uriInfo,JAXBElement<XPolicies> xpolicies) throws ForbiddenException,NotFoundException,Exception {
 		XPolicies rxpolicies=null;
-		rxpolicies = nps.addXPolicies(xpolicies);
+		rxpolicies = nps.addXPolicies(xpolicies.getValue(),uriInfo);
 			
 		return Response.status(201).entity(of.createPolicies(rxpolicies)).build();
 		
@@ -180,13 +180,13 @@ public class NffgPolicyWS {
 	
 	@GET
 	@Path("policies")
-	@ApiOperation(	value = "Retrieve all policies", notes = "xml format returned")
+	@ApiOperation(	value = "Retrieve all policies", notes = "Get all available policies")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message= "OK"),
 			@ApiResponse(code = 500, message= "Internal server error")
 	})
 	@Produces(MediaType.APPLICATION_XML)
-	public Response getPolicies()/* throws NotFoundException*/{
+	public Response getPolicies(){
 		
 		XPolicies rxpolicies = nps.getXPolicies();
 		return Response.status(200).entity(of.createPolicies(rxpolicies)).build();
@@ -194,7 +194,7 @@ public class NffgPolicyWS {
 	
 	@DELETE
 	@Path("policies")
-	@ApiOperation(	value = "Remove all policies", notes = "Empty request body/Empty Response Body")
+	@ApiOperation(	value = "Remove all policies", notes = "DELETE all available policies")
 	@ApiResponses(value = {
 			@ApiResponse(code = 204, message= "All policies removed"),
 			@ApiResponse(code = 500, message= "Internal server error")
@@ -229,7 +229,8 @@ public class NffgPolicyWS {
 	})
 	@Consumes(MediaType.APPLICATION_XML)
 	@Produces(MediaType.APPLICATION_XML)
-	public Response updatePolicyByName(@PathParam("name") String name,XPolicy xpolicy) throws NotFoundException,ForbiddenException{
+	public Response updatePolicyByName(@PathParam("name") String name,JAXBElement<XPolicy> jxpolicy) throws NotFoundException,ForbiddenException{
+		XPolicy xpolicy = jxpolicy.getValue();
 		xpolicy.setName(name);
 		XPolicy rxpolicy = nps.updatePolicyByName(xpolicy);
 		return Response.status(200).entity(of.createPolicy(rxpolicy)).build();

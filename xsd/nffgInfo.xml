@@ -5,7 +5,7 @@
 	xsi:schemaLocation="http://www.example.org/nffgVerifier nffgVerifier.xsd ">
 
 
-	<nffg>
+	<nffg href="http://localhost:8080/NffgService/rest/nffg/nffg1">
 		<name>nffg1</name>
 		<lastUpdate>2015-07-21T21:00:00.000+02:00</lastUpdate>
 	<nodes>
@@ -55,7 +55,7 @@
 	
 	</nffg>
 
-	<nffg>
+	<nffg href="http://localhost:8080/NffgService/rest/nffg/nffg2">
 		<name>nffg2</name>
 		<lastUpdate>2015-07-21T21:00:00.000+02:00</lastUpdate>
 	<nodes>

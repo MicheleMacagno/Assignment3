@@ -3,7 +3,7 @@
 	xmlns="http://www.example.org/nffgVerifier" 
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
 	xsi:schemaLocation="http://www.example.org/nffgVerifier nffgVerifier.xsd ">
-		<policy nffg="nffg1">
+		<policy nffg="nffg1" href="http://localhost:8080/NffgService/rest/policy/policy1">
 			<name>policy1</name>
 			<positivity>true</positivity>
 			<src>nodo1</src>
@@ -15,7 +15,7 @@
 			</verification>
 		</policy>
 		
-		<policy nffg="nffg2">
+		<policy nffg="nffg2" href="http://localhost:8080/NffgService/rest/policy/policy1">
 			<name>PolicyTraversal1</name>
 			<positivity>true</positivity>
 			<src>nodos1</src>

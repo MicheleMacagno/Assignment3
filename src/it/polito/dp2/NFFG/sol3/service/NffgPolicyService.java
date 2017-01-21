@@ -1,5 +1,6 @@
 package it.polito.dp2.NFFG.sol3.service;
 
+import java.net.URI;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -16,8 +17,7 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
-
+import javax.ws.rs.core.UriInfo;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
@@ -95,7 +95,7 @@ public class NffgPolicyService {
 		return returnXNffgs;
 	}
 	
-	public XNffgs addXNffgs(XNffgs xnffgs) throws ForbiddenException{
+	public XNffgs addXNffgs(XNffgs xnffgs,UriInfo uriInfo) throws ForbiddenException{
 		
 		XNffgs returnedXNffgs = new XNffgs();
 		
@@ -115,7 +115,7 @@ public class NffgPolicyService {
 			
 			xnffgs.getNffg().forEach(n->{
 				//call the method addXNffg adding a policy at a time
-				returnedXNffgs.getNffg().add(addXNffg(n));
+				returnedXNffgs.getNffg().add(addXNffg(n,uriInfo));
 			});
 		}
 		
@@ -131,7 +131,7 @@ public class NffgPolicyService {
 	 * XNffg element: with up to date information (i.e. Last Update Time)
 	 * Throws Exceptions on failures
 	 */
-	public XNffg addXNffg(XNffg nffg) throws ForbiddenException,InternalServerErrorException{
+	public XNffg addXNffg(XNffg nffg,UriInfo uriInfo) throws ForbiddenException,InternalServerErrorException{
 		//at the end of the procedure it is inserted in the big map, containing as Key the name of Nfg, and as content the set of Nodes (with
 		//relative Neo4J Id of Nodes
 		ConcurrentHashMap<String,String> tmpMapNameNodesNeo  = new ConcurrentHashMap<String,String>();
@@ -307,7 +307,8 @@ public class NffgPolicyService {
 				//Only the effectively registered nodes have been inserted in the maps
 				
 				//CONSISTENCY of Data: only in case of success data is stored
-					
+				URI uri = uriInfo.getBaseUriBuilder().path("nffg").path(nffg.getName()).build();
+				nffg.setHref(uri.toString());	
 				mapXNffg.put(nffg.getName(), nffg);
 				mapNffgNodesNffg.put(nffg.getName(), tmpMapNameNodesNeo);
 				mapNameNffgMasterNodesNeo.put(nffg.getName(), nffgNodeId);
@@ -368,7 +369,7 @@ public class NffgPolicyService {
 	 * 
 	 */
 	//TODO: add conformity check to xml 
-	public XPolicy addXPolicyVerifyXNffg(XPolicy policy) throws NotFoundException{
+	public XPolicy addXPolicyVerifyXNffg(XPolicy policy,UriInfo uriInfo) throws NotFoundException{
 		
 		//these two synchronized allow us to exploit a bit more parallelism of operations
 		//operations are exploited both on policy and in nffg
@@ -382,8 +383,11 @@ public class NffgPolicyService {
 							Response.status(404).entity("Error - Nffg name not existing").build());
 				}
 				else{
+					URI uri = uriInfo.getBaseUriBuilder().path("policy").path(policy.getName()).build();
+					policy.setHref(uri.toString());
 					//allowed to overwrite existing policies
 					mapXPolicy.put(policy.getName(), policy);
+					
 					return policy;
 				}
 			}
@@ -392,7 +396,7 @@ public class NffgPolicyService {
 	
 	
 	//TODO: manage policy not existing or nffg not existing
-	public XPolicies addXPolicies(XPolicies xpolicies) throws NotFoundException,InternalServerErrorException {
+	public XPolicies addXPolicies(XPolicies xpolicies,UriInfo uriInfo) throws NotFoundException,InternalServerErrorException {
 		synchronized(mapXNffg){
 			synchronized(mapXPolicy){
 				
@@ -419,7 +423,7 @@ public class NffgPolicyService {
 						else if(p.getVerification().getVerificationTime()==null){
 							p.setVerification(null);
 						}
-						list.add(addXPolicyVerifyXNffg(p));
+						list.add(addXPolicyVerifyXNffg(p,uriInfo));
 					});
 					
 					return returnedXPolicies;
