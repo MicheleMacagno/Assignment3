@@ -31,7 +31,7 @@ public class NffgVerifierConcrete implements NffgVerifier {
 
 	private String baseServiceUrl="http://localhost:8080/NffgService/rest/";
 	private Client client;
-	private ObjectFactory of;
+	private ObjectFactory of; //it can be used to debug the code
 	
 	private Set<NffgReader> setNffgReader = null;
 	private Set<PolicyReader> setPolicyReader = null;
@@ -55,8 +55,8 @@ public class NffgVerifierConcrete implements NffgVerifier {
 					.request(MediaType.APPLICATION_XML)
 					.get(XNffgs.class);
 				
-				//DEBUG
-//				this.printXML(null,of.createNffgs(xnffgs));
+				//DEBUG - enable to debug
+				//this.printXML(null,of.createNffgs(xnffgs));
 			}catch(WebApplicationException e){
 				System.out.println(e.getMessage());
 				if(e.getResponse().getStatus()==ReturnStatus.NOT_FOUND){
@@ -68,7 +68,7 @@ public class NffgVerifierConcrete implements NffgVerifier {
 			
 				System.out.println("404 Error - Probably the service is not available!!");
 				System.out.println("Error - Unexcpected error while trying to retrieve the set of nffgs contacting the web service");
-//				e.printStackTrace();
+				//e.printStackTrace();
 				System.out.println(e.getMessage());
 				throw new NffgVerifierException(e);
 			}
@@ -81,8 +81,8 @@ public class NffgVerifierConcrete implements NffgVerifier {
 					.request(MediaType.APPLICATION_XML)
 					.get(XPolicies.class);
 				
-				//DEBUG
-//				this.printXML(null,of.createPolicies(xpolicies));
+				//DEBUG - enable to debug
+				//this.printXML(null,of.createPolicies(xpolicies));
 				
 				createNffgReader();
 			}catch(Exception e){
@@ -100,9 +100,9 @@ public class NffgVerifierConcrete implements NffgVerifier {
 	
 
 	@Override
-	public NffgReader getNffg(String arg0) {
+	public NffgReader getNffg(String name) {
 		for(NffgReader nr : setNffgReader){
-			if(nr.getName().equals(arg0)){
+			if(nr.getName().equals(name)){
 				return nr;
 			}
 		}
@@ -123,10 +123,10 @@ public class NffgVerifierConcrete implements NffgVerifier {
 	}
 
 	@Override
-	public Set<PolicyReader> getPolicies(String arg0) {
+	public Set<PolicyReader> getPolicies(String namenffg) {
 		Set<PolicyReader> toReturn = 
 				setPolicyReader.stream().filter(p->{
-			return(	p.getNffg().getName().equals(arg0) );
+			return(	p.getNffg().getName().equals(namenffg) );
 		}).collect(Collectors.toSet());
 		
 		//in case nothing found, return null - by definition
@@ -139,7 +139,7 @@ public class NffgVerifierConcrete implements NffgVerifier {
 	}
 
 	@Override
-	public Set<PolicyReader> getPolicies(Calendar arg0) {
+	public Set<PolicyReader> getPolicies(Calendar verificationtime) {
 		Set<PolicyReader> toReturn =
 				setPolicyReader.stream().filter(p->{
 						//verify if verification data exists for the following policy
@@ -147,7 +147,7 @@ public class NffgVerifierConcrete implements NffgVerifier {
 							return false;
 						}
 						//if exist, verify if the verification date is grater than the current one
-						return((p.getResult().getVerificationTime().compareTo(arg0))> 0 );
+						return((p.getResult().getVerificationTime().compareTo(verificationtime))> 0 );
 		}).collect(Collectors.toSet());
 		
 		//in case nothing found, return null - by definition
@@ -187,7 +187,6 @@ public class NffgVerifierConcrete implements NffgVerifier {
 			})
 			.collect(Collectors.toList())
 			.stream().forEach(policy -> {
-//TODO: FIX IT
 							NodeReader nrSrc = nr.getNodes().stream().filter(n->{
 								return(	n.getName().equals(policy.getSrc())	);
 								
@@ -207,9 +206,6 @@ public class NffgVerifierConcrete implements NffgVerifier {
 							}
 							else{
 								//TRAVERSAL POLICY
-								
-//									Traversal t = policy.getTraversal();
-								
 								TraversalPolicyReaderConcrete tpr = new TraversalPolicyReaderConcrete(policy, nr, nrSrc, nrDst);
 								setPolicyReader.add(tpr);
 							}
@@ -222,7 +218,12 @@ public class NffgVerifierConcrete implements NffgVerifier {
 			
 	}
 	
-	
+	/*
+	 * This method is NEVER called in final release.
+	 * It is written only to check on standard outout that the 
+	 * result is the expected one.
+	 * I do not removed it because it can be useful in the final exam for debug purposes
+	 */
 	public <T> void printXML(String filename, JAXBElement<T> je){
     	File file = null;
     	
@@ -235,11 +236,10 @@ public class NffgVerifierConcrete implements NffgVerifier {
 			jaxbMarshaller = jaxbContext.createMarshaller();
 			jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 			//Validation of the schema - from JAXB-unmarshal-validate
-//			jaxbMarshaller.setSchema(sf.newSchema(new File("xsd/nffgVerifier.xsd")));
-//			ObjectFactory objectFactory = new ObjectFactory();
-//		    JAXBElement<XPolicies> je = objectFactory.createPolicies(xpolicies);
+			//jaxbMarshaller.setSchema(sf.newSchema(new File("xsd/nffgVerifier.xsd")));
+			//ObjectFactory objectFactory = new ObjectFactory();
+			//JAXBElement<XPolicies> je = objectFactory.createPolicies(xpolicies);
 		    		   
-//		     AddressType shipping = je.getValue();
 			if(filename!=null){
 				try{
 					file = new File(filename);

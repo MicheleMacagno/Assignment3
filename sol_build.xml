@@ -15,12 +15,9 @@
 	<property name="bind.dir" location="${basedir}/gen-bind" />
 	<property name="client1.dir" location="${basedir}/src/it/polito/dp2/NFFG/sol3/client1" />
 	<property name="client2.dir" location="${basedir}/src/it/polito/dp2/NFFG/sol3/client2" />
+	<property name="WADL" value="${NEO4JURL}/application.wadl"/>
 	
-	<property name="PORT" value="8080"/>
-	<property name="URLNEO" value="http://localhost:${PORT}/Neo4JXML/rest"/>
-	<property name="WADL" value="${URLNEO}/application.wadl"/>
-	
-	
+	<property name="schema.dir" location="${basedir}/WebContent/WEB-INF/classes/xsd"/>
 	
 	<!-- define wjc task (WADL to Java) -->
 	<taskdef name="wjc" classname="org.jvnet.ws.wadl2java.WJCTask">
@@ -31,7 +28,10 @@
 	
 	<target name="build-service" depends="generate-bindings-xml">
 		<mkdir dir="${gen.dir}"/>
-		<mkdir dir="${build.dir}" />
+		<mkdir dir="${build.dir}"/>
+		<mkdir dir="${schema.dir}"/>
+		<copy file="${basedir}/xsd/nffgVerifier.xsd" todir="${schema.dir}" overwrite="true"/>
+		
 		<echo message="I'm generating the artifacts" />
 		
 		<wjc description="${WADL}" package="it.polito.dp2.NFFG.sol3.service"
@@ -94,9 +94,9 @@
 	
 	<!--	Added by me to speed up main execution -->
 	<!--<target name="run-main" depends="setseed, redeployWS, redeployNeo4JXML,build-client"> -->
-	<target name="run-main" depends="setseed,build-client">
+	<target name="run-main" depends="setseed,build-service,build-client">
 		<echo>Running Main...</echo>
-				<java classname="it.polito.dp2.NFFG.sol3.service.Main" failonerror="true" fork="yes">
+				<java classname="it.polito.dp2.NFFG.sol3.client1.Main" failonerror="true" fork="yes">
 					<sysproperty key="it.polito.dp2.NFFG.NFFGClientFactory" value="${NFFGClientFactory}" />
 					<sysproperty key="it.polito.dp2.NFFG.NffgVerifierFactory" value="${NFFGInfo.NffgVerifierFactory}" />
 					<sysproperty key="it.polito.dp2.NFFG.Random.seed" value="${seed}"/>

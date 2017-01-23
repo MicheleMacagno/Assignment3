@@ -209,7 +209,7 @@ public class Main {
 	
 	public static void testGetEmptySetNffgs(){
 //		TEST GET EMPTY SET OF POLICIES
-		it.polito.dp2.NFFG.sol3.client2.NffgVerifierFactory nvf = it.polito.dp2.NFFG.sol3.client2.NffgVerifierFactory.newInstance();
+		it.polito.dp2.NFFG.NffgVerifierFactory nvf = it.polito.dp2.NFFG.NffgVerifierFactory.newInstance();
 		NffgVerifierConcrete nv = null;
 		try {
 			nv = (NffgVerifierConcrete) nvf.newNffgVerifier();
@@ -253,7 +253,7 @@ public class Main {
 		}
 		
 		try {
-			it.polito.dp2.NFFG.sol3.client2.NffgVerifierFactory nvf = it.polito.dp2.NFFG.sol3.client2.NffgVerifierFactory.newInstance();
+			it.polito.dp2.NFFG.NffgVerifierFactory nvf = it.polito.dp2.NFFG.NffgVerifierFactory.newInstance();
 			nv = (NffgVerifierConcrete) nvf.newNffgVerifier();
 		} catch (NffgVerifierException e1) {
 			// TODO Auto-generated catch block
@@ -307,7 +307,7 @@ public class Main {
 		}
 		
 		try {
-			it.polito.dp2.NFFG.sol3.client2.NffgVerifierFactory nvf = it.polito.dp2.NFFG.sol3.client2.NffgVerifierFactory.newInstance();
+			it.polito.dp2.NFFG.NffgVerifierFactory nvf = it.polito.dp2.NFFG.NffgVerifierFactory.newInstance();
 			nv = (NffgVerifierConcrete) nvf.newNffgVerifier();
 			
 		} catch (NffgVerifierException e1) {
@@ -346,7 +346,7 @@ public class Main {
 		}
 		
 		try {
-			it.polito.dp2.NFFG.sol3.client2.NffgVerifierFactory nvf = it.polito.dp2.NFFG.sol3.client2.NffgVerifierFactory.newInstance();
+			it.polito.dp2.NFFG.NffgVerifierFactory nvf = it.polito.dp2.NFFG.NffgVerifierFactory.newInstance();
 			nv = (NffgVerifierConcrete) nvf.newNffgVerifier();
 			
 		} catch (NffgVerifierException e1) {

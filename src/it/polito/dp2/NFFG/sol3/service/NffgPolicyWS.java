@@ -65,7 +65,7 @@ public class NffgPolicyWS {
   	}
 	
 	@GET
-	@Path("/nffg/{name: [a-zA-Z_][a-zA-Z0-9_]*}")
+	@Path("nffg/{name: [a-zA-Z_][a-zA-Z0-9_]*}")
 	@ApiOperation( value = "Retrieve an Nffg given its name", notes="single nffg")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message= "OK"),
@@ -97,7 +97,7 @@ public class NffgPolicyWS {
   	}
 	
 	@GET
-	@Path("/nffgs")
+	@Path("nffgs")
 	@ApiOperation(	value = "Retrieve all nffgs", notes = "get all available nffgs")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message= "OK"),
@@ -205,7 +205,7 @@ public class NffgPolicyWS {
 	}
 	
 	@DELETE
-	@Path("/policy/{name: [a-zA-Z_][a-zA-Z0-9_]*}")
+	@Path("policy/{name: [a-zA-Z_][a-zA-Z0-9_]*}")
 	@ApiOperation(	value = "Remove Policy given its name", notes = "xml format policy returned")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message= "OK Removed"),

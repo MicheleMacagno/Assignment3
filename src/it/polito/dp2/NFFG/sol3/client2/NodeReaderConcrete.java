@@ -39,10 +39,10 @@ public class NodeReaderConcrete extends NamedEntityReaderConcrete implements Nod
 		return links;
 	}
 	
-	/**
+	/*
 	 * This method receives the Nffg element and the set of NodeReader. This way, it adds
 	 * all the available links to the solution
-	 * @param snr
+	 * 
 	 */
 	protected void addLinks(Set<NodeReader> snr,List<XLink> lll,XNode n){
 		//for each link

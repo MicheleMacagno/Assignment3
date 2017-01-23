@@ -55,10 +55,13 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 			client = ClientBuilder.newClient();
 			factory = it.polito.dp2.NFFG.NffgVerifierFactory.newInstance();
 			monitor = factory.newNffgVerifier();
+		}catch(FactoryConfigurationError e){
+			e.printStackTrace();
+			throw new ServiceException("Error 0 during creation of NffgVerifier");
 		} catch (NffgVerifierException e) {
 			e.printStackTrace();
 			throw new ServiceException("Error 1 during creation of NffgVerifier");
-		}catch(Exception e){
+		}catch(Throwable e){
 			e.printStackTrace();
 			throw new ServiceException("Error 2 during creation of NffgVerifier");
 		}
