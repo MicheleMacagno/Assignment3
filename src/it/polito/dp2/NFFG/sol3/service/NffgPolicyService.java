@@ -78,7 +78,7 @@ public class NffgPolicyService {
 			else{
 				logger.log(Level.WARNING,"Nffg not found in the database");
 				throw new NotFoundException("Nffg not found in the database",
-						Response.status(404).entity("Nffg not found in the database").build());
+						Response.status(404).entity("Nffg not found in the database").type(MediaType.TEXT_PLAIN).build());
 			}
 		}
 	}
@@ -109,7 +109,7 @@ public class NffgPolicyService {
 				if(mapXNffg.containsKey(n.getName())){
 					logger.log(Level.WARNING,"At least one of the Nffg in the set is already existing");
 					throw new ForbiddenException("Error 403 - At least one of the Nffg in the set is already existing",
-							Response.status(403).entity("Error 403 - At least one of the Nffg in the set is already existing").build());
+							Response.status(403).entity("Error 403 - At least one of the Nffg in the set is already existing").type(MediaType.TEXT_PLAIN).build());
 				}
 			});
 			
@@ -184,7 +184,7 @@ public class NffgPolicyService {
 							logger.log(Level.SEVERE,"Something was wrong while contacting neo4j to insert a node. End");
 							logger.log(Level.SEVERE, e.getMessage(),e);
 							throw new InternalServerErrorException("Something was wrong while contacting neo4j to insert a node",
-									Response.status(500).entity("Something was wrong while contacting neo4j to insert a node").build());
+									Response.status(500).entity("Something was wrong while contacting neo4j to insert a node").type(MediaType.TEXT_PLAIN).build());
 						}
 					}
 					
@@ -228,7 +228,7 @@ public class NffgPolicyService {
 						logger.log(Level.SEVERE,e.getMessage(),e);
 						 
 						throw new InternalServerErrorException("Something was wrong while contacting neo4j to create the nffg node",
-								Response.status(500).entity("Something was wrong while contacting neo4j to create the nffg node").build());
+								Response.status(500).entity("Something was wrong while contacting neo4j to create the nffg node").type(MediaType.TEXT_PLAIN).build());
 					}
 	
 					
@@ -261,7 +261,7 @@ public class NffgPolicyService {
 							logger.log(Level.SEVERE,"Error in creating the relationship\nSomething was wrong while contacting neo4j to create relationship");
 							logger.log(Level.SEVERE,e.getMessage(),e);
 							throw new InternalServerErrorException("Something was wrong while contacting neo4j  to create relationship",
-									Response.status(500).entity("Something was wrong while contacting neo4j  to create relationship").build());
+									Response.status(500).entity("Something was wrong while contacting neo4j  to create relationship").type(MediaType.TEXT_PLAIN).build());
 						}
 						
 					}
@@ -297,7 +297,7 @@ public class NffgPolicyService {
 							logger.log(Level.SEVERE,"Error in creating the relationship\nSomething was wrong while contacting neo4j to create relationship for the nffg");
 							logger.log(Level.SEVERE,e.getMessage(),e);
 							throw new InternalServerErrorException("Something was wrong while contacting neo4j  to create relationship for the nffg",
-									Response.status(500).entity("Something was wrong while contacting neo4j  to create relationship for the nffg").build());
+									Response.status(500).entity("Something was wrong while contacting neo4j  to create relationship for the nffg").type(MediaType.TEXT_PLAIN).build());
 						}
 					}
 					
@@ -307,7 +307,7 @@ public class NffgPolicyService {
 				//Only the effectively registered nodes have been inserted in the maps
 				
 				//CONSISTENCY of Data: only in case of success data is stored
-				URI uri = uriInfo.getBaseUriBuilder().path("nffg").path(nffg.getName()).build();
+				URI uri = uriInfo.getBaseUriBuilder().path("nffgs").path(nffg.getName()).build();
 				nffg.setHref(uri.toString());	
 				mapXNffg.put(nffg.getName(), nffg);
 				mapNffgNodesNffg.put(nffg.getName(), tmpMapNameNodesNeo);
@@ -319,7 +319,7 @@ public class NffgPolicyService {
 			else{
 				logger.log(Level.WARNING,"Error - Nffg name already existing - Please submit a Nffg with a different name ");
 				throw new ForbiddenException("Error - Nffg name already existing - Please submit a Nffg with a different name ",
-						Response.status(403).entity("Error - Nffg name already existing").build());
+						Response.status(403).entity("Error - Nffg name already existing").type(MediaType.TEXT_PLAIN).build());
 			}
 		}
 	}
@@ -338,7 +338,7 @@ public class NffgPolicyService {
 			}
 			else{
 				throw new NotFoundException("The requested Policy is not existing", 
-						Response.status(404).entity("The requested Policy is not existing").build());
+						Response.status(404).entity("The requested Policy is not existing").type(MediaType.TEXT_PLAIN).build());
 			}
 		}
 	}
@@ -360,31 +360,28 @@ public class NffgPolicyService {
 
 	
 	/**
-	 * Verify the Nffg is existing and then add the policy in the database
-	 * (in case the policy is not already existing)
+	 *  
 	 * @param policy
-	 * @return
-	 * The policy in case of success
-	 * throws an exception in case of failure
-	 * 
+	 * @param uriInfo
+	 * @return Response type: status 201, in case the policy was not existing, status 200 if the policy is updated
+	 * @throws ForbiddenException: in case the nffg or source node or destination node of the Policy are not existing
 	 */
-	//TODO: add conformity check to xml 
-	public XPolicy addXPolicyVerifyXNffg(XPolicy policy,UriInfo uriInfo) throws NotFoundException{
+public Response createOrUpdatePolicyVerifyNffg(XPolicy policy,UriInfo uriInfo) throws ForbiddenException{
 		
 		//these two synchronized allow us to exploit a bit more parallelism of operations
 		//operations are exploited both on policy and in nffg
 		synchronized(mapXNffg){
 			synchronized(mapXPolicy){
 				
-				
+				//verify the existence of nffg
 				if(!mapXNffg.containsKey(policy.getNffg())){
 					logger.log(Level.WARNING,"Error - Nffg not existing");
-					throw new NotFoundException("Error - Nffg name not existing",
-							Response.status(404).entity("Error - Nffg name not existing").build());
+					throw new ForbiddenException("Error 403 - Nffg name not existing",
+							Response.status(403).entity("Error 403 - Nffg name not existing").type(MediaType.TEXT_PLAIN).build());
 				}
 				else{
 					
-					//TODO:verify the existence of nodes
+					//verify the existence of nodes
 					XNffg xnffg = mapXNffg.get(policy.getNffg());
 					Boolean found = false;
 					
@@ -397,8 +394,8 @@ public class NffgPolicyService {
 					}
 					if(!found){
 						logger.log(Level.WARNING,"Error - Src Node of nffg is not existing");
-						throw new ForbiddenException("Error - Src Node of nffg is not existing",
-								Response.status(403).entity("Error - Src Node of nffg is not existing").build());
+						throw new ForbiddenException("Error 403 - Src Node of nffg is not existing",
+								Response.status(403).entity("Error 403 - Src Node of nffg is not existing").type(MediaType.TEXT_PLAIN).build());
 					}
 					
 					//verify the existence of dstNode
@@ -411,73 +408,38 @@ public class NffgPolicyService {
 					}
 					if(!found){
 						logger.log(Level.WARNING,"Error - Dst Node of nffg is not existing");
-						throw new ForbiddenException("Error - Dst Node of nffg is not existing",
-								Response.status(403).entity("Error - Dst Node of nffg is not existing").build());
+						throw new ForbiddenException("Error 403 - Dst Node of nffg is not existing",
+								Response.status(403).entity("Error 403 - Dst Node of nffg is not existing").type(MediaType.TEXT_PLAIN).build());
 					}
 					
 					
 					//create officially the policy
 					
-					URI uri = uriInfo.getBaseUriBuilder().path("policy").path(policy.getName()).build();
+					URI uri = uriInfo.getBaseUriBuilder().path("policies").path(policy.getName()).build();
 					policy.setHref(uri.toString());
 					//allowed to overwrite existing policies
-					mapXPolicy.put(policy.getName(), policy);
 					
-					return policy;
+					it.polito.dp2.NFFG.sol3.bindings.ObjectFactory of = new it.polito.dp2.NFFG.sol3.bindings.ObjectFactory();
+					int return_status=201;
+					//Status Code 200 - policy updated
+					if(mapXPolicy.containsKey(policy.getName())){
+						return_status=200;
+						mapXPolicy.put(policy.getName(), policy);
+						return Response.status(200).entity(of.createPolicy(policy)).build();
+					}else{
+						//Status Code 201 - Policy Created
+						mapXPolicy.put(policy.getName(), policy);
+						return Response.created(uri).entity(of.createPolicy(policy)).build();
+					}
+					
+					
 				}
 			}
 		}
 	}
 	
 	
-	//TODO: manage policy not existing or nffg not existing
-	public XPolicies addXPolicies(XPolicies xpolicies,UriInfo uriInfo) throws NotFoundException,InternalServerErrorException,ForbiddenException {
-		synchronized(mapXNffg){
-			synchronized(mapXPolicy){
-				
-					XPolicies returnedXPolicies = new XPolicies();
-					
-					//verify if the Nffg related to the policies are really existing
-					xpolicies.getPolicy().forEach(p->{
-						if(!mapXNffg.containsKey(p.getNffg())){
-							logger.log(Level.WARNING,"The nffg corresponding to the policy is not existing");
-							throw new NotFoundException("The nffg corresponding to the policy is not existing",
-									Response.status(404).entity("The nffg corresponding to the policy is not existing").build());
-						}
-					});		
-					
-				try{
-					//prepare a list of all created policies. To give back to the service 
-					List<XPolicy> list = returnedXPolicies.getPolicy(); //initialize
-					xpolicies.getPolicy().forEach(p->{
-						//sometimes the verification can be totally empty
-						if(p.getVerification()==null){
-							p.setVerification(null);
-						}
-						//if it is not specified the verification time it means the policy was not verified.
-						else if(p.getVerification().getVerificationTime()==null){
-							p.setVerification(null);
-						}
-						list.add(addXPolicyVerifyXNffg(p,uriInfo));
-					});
-					
-					return returnedXPolicies;
-				}catch(ForbiddenException e){
-					logger.log(Level.WARNING, "A node is not existing", e);
-					throw e;
-				}catch(Exception e){
-					logger.log(Level.SEVERE,e.getMessage(),e);
-					 
-					throw new InternalServerErrorException("Unexpected Error in the system",
-							Response.status(500).entity("Unexpected Error in the system").build());
-				}
-				
-				
-			}
-		}
-		
-		
-	}
+
 	
 	public void deleteAllPolicies(){
 		synchronized(mapXPolicy){
@@ -496,41 +458,12 @@ public class NffgPolicyService {
 			}
 			else{
 				throw new NotFoundException("The requested policy does not exists! Impossible to remove it",
-						Response.status(404).entity("The requested policy does not exists! Impossible to remove it").build());
+						Response.status(404).entity("The requested policy does not exists! Impossible to remove it").type(MediaType.TEXT_PLAIN).build());
 			}
 		}
 	}
 	
-	public XPolicy updatePolicyByName(XPolicy xpolicy) throws NotFoundException,ForbiddenException{
-		
-		synchronized(mapXNffg){
-			synchronized(mapXPolicy){
-				
-				//Policy not existing
-				if(!mapXPolicy.containsKey(xpolicy.getName())){
-					throw new NotFoundException("The policy is not existing, impossible to update it",
-							Response.status(404).entity("The policy is not existing, impossible to update it").build());
-				}
-				
-				//Nffg of updated policy not existing
-				if(!mapXNffg.containsKey(xpolicy.getNffg())){
-					throw new ForbiddenException("Error - Nffg name not existing",
-							Response.status(403).entity("Error - Nffg name not existing").build());
-				}
-				
-				//Updated the policy and return it
-				mapXPolicy.put(xpolicy.getName(),xpolicy);
-				return xpolicy;
-				
-			}
-		}
-		
-		
-	}
-	
-//TODO: test the verification
-//TODO modify everything
-// policy and node id must come from the policy
+
 	public XPolicy verifyPolicy(String name){
 		XPolicy xpolicy;
 		
@@ -551,7 +484,7 @@ public class NffgPolicyService {
 				
 				logger.log(Level.WARNING,"--Error impossible to find the policy in the database");
 				throw new NotFoundException("Unable to find the policy to validate",
-						Response.status(404).entity("Unable to find the policy to validate").build());
+						Response.status(404).entity("Unable to find the policy to validate").type(MediaType.TEXT_PLAIN).build());
 			}
 			
 			try{
@@ -592,7 +525,7 @@ public class NffgPolicyService {
 				logger.log(Level.SEVERE,"Error in retrieving the paths" + e.getMessage());
 				logger.log(Level.SEVERE,e.getMessage(),e);
 				throw new InternalServerErrorException("Internal Server Error - Error in retrieving the paths",
-						Response.status(500).entity("Internal Server Error - Error in retrieving the paths!\nProblems while contacting neo4J").build());
+						Response.status(500).entity("Internal Server Error - Error in retrieving the paths!\nProblems while contacting neo4J").type(MediaType.TEXT_PLAIN).build());
 			}
 		}
 

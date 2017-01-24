@@ -65,7 +65,7 @@ public class NffgPolicyWS {
   	}
 	
 	@GET
-	@Path("nffg/{name: [a-zA-Z_][a-zA-Z0-9_]*}")
+	@Path("nffgs/{name: [a-zA-Z][a-zA-Z0-9]*}")
 	@ApiOperation( value = "Retrieve an Nffg given its name", notes="single nffg")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message= "OK"),
@@ -110,26 +110,9 @@ public class NffgPolicyWS {
 		return Response.status(200).entity(of.createNffgs(rxnffgs)).build();
 	}
 	
-	@POST
-	@Path("policy")
-	@ApiOperation(	value = "Create a new Policy", notes = "xml format required")
-	@ApiResponses(value = {
-			@ApiResponse(code = 201, message= "Created"),
-			@ApiResponse(code = 400, message= "The body does not respect the XML schema"),
-			@ApiResponse(code = 404, message= "Nffg Not Found"),
-			@ApiResponse(code = 500, message= "Internal server error")
-	})
-	@Produces(MediaType.APPLICATION_XML)
-	@Consumes(MediaType.APPLICATION_XML)
-	public Response storePolicyByName(@Context UriInfo uriInfo,JAXBElement<XPolicy> xpolicy) throws BadRequestException, ForbiddenException{
-		XPolicy rxpolicy=null;
-		rxpolicy = nps.addXPolicyVerifyXNffg(xpolicy.getValue(),uriInfo);
-		URI uri = uriInfo.getAbsolutePathBuilder().path(rxpolicy.getName()).build();
-		return Response.created(uri).entity(of.createPolicy(rxpolicy)).build();
-	}
 		
 	@GET
-	@Path("policy/{name: [a-zA-Z_][a-zA-Z0-9_]*}")
+	@Path("policies/{name: [a-zA-Z][a-zA-Z0-9]*}")
 	@ApiOperation(	value = "Read an existing policy", notes = "get a single policy")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message= "OK"),
@@ -144,7 +127,7 @@ public class NffgPolicyWS {
 	}
 	
 	@POST
-	@Path("policy/{name: [a-zA-Z_][a-zA-Z0-9_]*}")
+	@Path("policies/{name: [a-zA-Z][a-zA-Z0-9]*}")
 	@ApiOperation(	value = "Verify an existing policy", notes = "Empty Body")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message= "OK"),
@@ -159,24 +142,6 @@ public class NffgPolicyWS {
 		return Response.status(200).entity(of.createPolicy(rxpolicy)).build();
 	}
 	
-	@POST
-	@Path("policies")
-	@ApiOperation(	value = "Create new set of policies", notes = "xml format required")
-	@ApiResponses(value = {
-			@ApiResponse(code = 201, message= "Created"),
-			@ApiResponse(code = 400, message= "The body does not respect the XML schema"),
-			@ApiResponse(code = 404, message= "Nffg to which a policy refer is Not Found"),
-			@ApiResponse(code = 500, message= "Internal server error")
-	})
-	@Produces(MediaType.APPLICATION_XML)
-	@Consumes(MediaType.APPLICATION_XML)
-	public Response storePolicies(@Context UriInfo uriInfo,JAXBElement<XPolicies> xpolicies) throws ForbiddenException,NotFoundException,Exception {
-		XPolicies rxpolicies=null;
-		rxpolicies = nps.addXPolicies(xpolicies.getValue(),uriInfo);
-			
-		return Response.status(201).entity(of.createPolicies(rxpolicies)).build();
-		
-  	}
 	
 	@GET
 	@Path("policies")
@@ -205,7 +170,7 @@ public class NffgPolicyWS {
 	}
 	
 	@DELETE
-	@Path("policy/{name: [a-zA-Z_][a-zA-Z0-9_]*}")
+	@Path("policies/{name: [a-zA-Z][a-zA-Z0-9]*}")
 	@ApiOperation(	value = "Remove Policy given its name", notes = "xml format policy returned")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message= "OK Removed"),
@@ -218,22 +183,24 @@ public class NffgPolicyWS {
 		return Response.status(200).entity(of.createPolicy(rxpolicy)).build();
 	}
 	
+	
 	@PUT
-	@Path("policy/{name: [a-zA-Z_][a-zA-Z0-9_]*}")
-	@ApiOperation(	value = "Update policy", notes = "xml format required")
+	@Path("policies/{name: [a-zA-Z][a-zA-Z0-9]*}")
+	@ApiOperation(	value = "Create or update policy", notes = "xml format required")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message= "Updated"),
-			@ApiResponse(code = 403, message= "Nffg of updated policy Not Existing"),
-			@ApiResponse(code = 404, message= "Policy not found"),
+			@ApiResponse(code = 201, message= "Created"),
+			@ApiResponse(code = 403, message= "Nffg or Node the policy refers to not existing"),
 			@ApiResponse(code = 500, message= "Internal server error")
 	})
 	@Consumes(MediaType.APPLICATION_XML)
 	@Produces(MediaType.APPLICATION_XML)
-	public Response updatePolicyByName(@PathParam("name") String name,JAXBElement<XPolicy> jxpolicy) throws NotFoundException,ForbiddenException{
+	public Response createOrUpdatePolicyByName(	@Context UriInfo uriInfo,
+										@PathParam("name") String name,
+										JAXBElement<XPolicy> jxpolicy) throws NotFoundException,ForbiddenException{
 		XPolicy xpolicy = jxpolicy.getValue();
 		xpolicy.setName(name);
-		XPolicy rxpolicy = nps.updatePolicyByName(xpolicy);
-		return Response.status(200).entity(of.createPolicy(rxpolicy)).build();
+		return(nps.createOrUpdatePolicyVerifyNffg(xpolicy, uriInfo));
 	}
 	
 //TODO remove

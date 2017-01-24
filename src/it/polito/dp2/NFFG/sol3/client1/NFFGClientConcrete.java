@@ -123,12 +123,6 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 	}
 	
 	
-
-	/*
-	 * NB as we have no @XmlRootElement, you have to post objectFactory.createXPolicies and createXNffgs
-	 * (non-Javadoc)
-	 * @see it.polito.dp2.NFFG.lab3.NFFGClient#loadAll()
-	 */
 	@Override
 	public void loadAll() throws AlreadyLoadedException, ServiceException {
 	
@@ -172,70 +166,63 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 			throw new ServiceException("--Error - Nffgs Unexpected error while creating the set of nffgs");
 		}
 		
-		//eventually remove the policies
-		XPolicies xpolicies = of.createXPolicies();
+		
+		
+		//eventually overwrite the policies
+//		XPolicies xpolicies = of.createXPolicies();
 		for(PolicyReader pr : policiesToAdd){
-			try{
 				XPolicy xpolicy = this.prepareXPolicy(pr);
-				xpolicies.getPolicy().add(xpolicy);
-			}catch(Exception e){
-				e.printStackTrace();
-				throw new ServiceException("-- Error in accessing informations about locally stored policies");
-			}
-		}
-		
-		//send the set of policies all together
-		resourceName = baseServiceUrl + "policies";
-		System.out.println(resourceName);
-		XPolicies responseP;
-
-//		DEBUG
-//		xpolicies.getPolicy().forEach(p->{
-//			System.out.println(p.getName());
-//			System.out.println(p.getNffg());
-//			System.out.println(p.getSrc());
-//			System.out.println(p.getDst());
-//			System.out.println(p.getTraversal());
-//			System.out.println(p.getVerification());
-//		});
-		
-//		this.printXML("prova.xml", xpolicies);
-		
-		try{
-			responseP = client.target(resourceName)
-					.request(MediaType.APPLICATION_XML)
-					.accept(MediaType.APPLICATION_XML)
-					.post(Entity.xml(of.createPolicies(xpolicies)),XPolicies.class);
-			
-//			this.printXML(null, of.createPolicies(responseP));
-		
-		}catch(WebApplicationException e){
-//			System.out.println(e.getResponse().getEntity(String.class));
-			System.out.println(e.getMessage());
-
-			switch(e.getResponse().getStatus()){
-			case ReturnStatus.NOT_FOUND:
-				throw new ServiceException(ReturnStatus.NOT_FOUND +" - Error - Nffg referring to the policy is not existing");
-			
-			case ReturnStatus.FORBIDDEN:
-				throw new  ServiceException(e.getResponse().getStatus()+" - Error - Node Not Existing" +e.getMessage());
+//				xpolicies.getPolicy().add(xpolicy);
 				
-			case ReturnStatus.NOT_ALLOWED:
-				throw new ServiceException(ReturnStatus.NOT_ALLOWED +" Error - Wrong query url! Use ?overwrite=y");
-			
-			case ReturnStatus.INTERNAL_SERVER_ERROR:
-				throw new  ServiceException(e.getResponse().getStatus()+" - Error " +e.getMessage());
-			
-			default:
-				throw new ServiceException(e.getResponse().getStatus()+" Error - Policy unexpected error during deletion of the policy");
-			}
-		}catch(Exception e){
-			e.printStackTrace();
-			System.out.println(e.getMessage());
-			throw new ServiceException("-- Error - Policies Unexpected error while creating the set of policies");
-		}
-	}
+				//send the set of policies all together
 
+//				DEBUG
+//				xpolicies.getPolicy().forEach(p->{
+//					System.out.println(p.getName());
+//					System.out.println(p.getNffg());
+//					System.out.println(p.getSrc());
+//					System.out.println(p.getDst());
+//					System.out.println(p.getTraversal());
+//					System.out.println(p.getVerification());
+//				});
+				
+//				this.printXML("prova.xml", xpolicies);
+				
+				XPolicy responseP;
+				resourceName = baseServiceUrl + "policies/"+xpolicy.getName();
+				System.out.println(resourceName);
+				try{
+					responseP = client.target(resourceName)
+							.request(MediaType.APPLICATION_XML)
+							.accept(MediaType.APPLICATION_XML)
+							.put(Entity.xml(of.createPolicy(xpolicy)),XPolicy.class);
+					
+//					this.printXML(null, of.createPolicies(responseP));
+				
+				}catch(WebApplicationException e){
+//					System.out.println(e.getResponse().getEntity(String.class));
+					System.out.println(e.getMessage());
+
+					switch(e.getResponse().getStatus()){
+					case ReturnStatus.FORBIDDEN:
+						throw new  ServiceException(e.getResponse().getStatus()+" - Error - Nffg or Node Not Existing\n" +e.getMessage());
+						
+					case ReturnStatus.INTERNAL_SERVER_ERROR:
+						throw new  ServiceException(e.getResponse().getStatus()+" - Error " +e.getMessage());
+					
+					default:
+						throw new ServiceException(e.getResponse().getStatus()+" Error - Policy unexpected error during deletion of the policy");
+					}
+				}catch(Exception e){
+					e.printStackTrace();
+					System.out.println(e.getMessage());
+					throw new ServiceException("-- Error - Policies Unexpected error while creating the set of policies");
+				}
+		}
+		
+		
+	}
+	
 	@Override
 	public void loadReachabilityPolicy(String name, String nffgName, boolean isPositive, String srcNodeName,String dstNodeName) throws UnknownNameException, ServiceException {
 		
@@ -260,25 +247,24 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 		xpolicy.setPositivity(isPositive);
 		xpolicy.setVerification(null);
 		
-		String resourceName = baseServiceUrl + "policy";
+		String resourceName = baseServiceUrl + "policies/"+name;
 		XPolicy response;
 		try{
 			response = client.target(resourceName)
 					.request(MediaType.APPLICATION_XML)
 					.accept(MediaType.APPLICATION_XML)
-					.post(Entity.xml(of.createPolicy(xpolicy)),XPolicy.class);
+					.put(Entity.xml(of.createPolicy(xpolicy)),XPolicy.class);
 //			this.printXML(null, of.createPolicy(response));
+			
 		}catch(WebApplicationException e){
 			System.out.println(e.getMessage());
 
 			
 			switch(e.getResponse().getStatus()){
-			case ReturnStatus.NOT_FOUND:
-				System.out.println(e.getMessage());
-				throw new UnknownNameException(ReturnStatus.NOT_FOUND+ " - Error - Nffg referring to the policy is not existing");
+			
 			case ReturnStatus.FORBIDDEN:
 				System.out.println(e.getMessage());
-				throw new UnknownNameException(e.getResponse().getStatus() + " - Error - A node of the policy refers to is not existing");
+				throw new UnknownNameException(e.getResponse().getStatus() + " - Error - Nffg or node of the policy refers to is not existing");
 			
 			case ReturnStatus.INTERNAL_SERVER_ERROR:
 				throw new  ServiceException(e.getResponse().getStatus()+" - Error " +e.getMessage());
@@ -293,6 +279,8 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 		
 	}
 
+
+
 	/*
 	 * This method contains the correct way to check the received exception
 	 * Please extend the usage of UniformInterfaceException to all other methods
@@ -301,7 +289,7 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 	 */
 	@Override
 	public void unloadReachabilityPolicy(String name) throws UnknownNameException, ServiceException {
-		String resourceName = baseServiceUrl + "policy/"+ name;
+		String resourceName = baseServiceUrl + "policies/"+ name;
 		XPolicy response;
 		try{
 			response = client.target(resourceName)
@@ -332,7 +320,7 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 
 	@Override
 	public boolean testReachabilityPolicy(String name) throws UnknownNameException, ServiceException {
-		String resourceName = baseServiceUrl + "policy/"+ name;
+		String resourceName = baseServiceUrl + "policies/"+ name;
 		
 		XPolicy response;
 		try{
@@ -457,7 +445,7 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 	 * Method used to prepare a Policy to send it to the web service.
 	 * Used by mane methods
 	 */
-	private XPolicy prepareXPolicy(PolicyReader pr) throws Exception{
+	private XPolicy prepareXPolicy(PolicyReader pr){
 		XPolicy xpolicy = of.createXPolicy();
 		xpolicy.setName(pr.getName());
 		xpolicy.setNffg(pr.getNffg().getName());
