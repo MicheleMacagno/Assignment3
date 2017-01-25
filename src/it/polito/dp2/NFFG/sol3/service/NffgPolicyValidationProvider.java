@@ -81,13 +81,15 @@ public class NffgPolicyValidationProvider implements MessageBodyReader<JAXBEleme
 			//in case of failure in validation, throw an exception
 			//Error 400 returned
 			throw new BadRequestException("Request body validation error", 
-					Response.status(400).entity("Error 400 - Error while validating against the schema\n" + validationErrorMessage).build());
+					Response.status(400).entity("Error 400 - Error while validating against the schema\n" + validationErrorMessage)
+					.type(MediaType.TEXT_PLAIN).build());
 		}
 		catch(Exception e){
 			//in case of failure in validation, throw an exception
 			String validationErrorMessage = "Request body validation error";
-			throw new BadRequestException("Request body validation error", 
-					Response.status(400).entity("Error 400 - Error while validating against the schema\n" + validationErrorMessage).build());
+			throw new BadRequestException("Error 400 - Request body validation error", 
+					Response.status(400).entity("Error 400 - Error while validating against the schema\n" + validationErrorMessage)
+					.type(MediaType.TEXT_PLAIN).build());
 		}
 	}
 

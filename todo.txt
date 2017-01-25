@@ -1,0 +1,9 @@
+- remove the singleton
+- remove the static to all methods
+- syncrhonize correctly nffgs and policies -> on the static objects, not on method declarations
+- add the Logger
+-verify the structure of the web service
+- delete unuseful comments
+
+
+-//TODO: change to 8080 NffgPolicyService L38

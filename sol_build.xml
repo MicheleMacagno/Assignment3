@@ -3,7 +3,7 @@
 	<import file="build.xml" />
 	
 	<description>
-			Script for NFFG Assignment 2 - For automatic classes generation
+			Script for NFFG Assignment 3 - For automatic classes generation
 	</description>
 	
 	<property name="basedir" location="." />
@@ -91,25 +91,5 @@
 		</javac>
 		<echo>Done.. Complied Client file</echo>
 	</target>
-	
-	<!--	Added by me to speed up main execution -->
-	<!--<target name="run-main" depends="setseed, redeployWS, redeployNeo4JXML,build-client"> -->
-	<target name="run-main" depends="setseed,build-service,build-client">
-		<echo>Running Main...</echo>
-				<java classname="it.polito.dp2.NFFG.sol3.client1.Main" failonerror="true" fork="yes">
-					<sysproperty key="it.polito.dp2.NFFG.NFFGClientFactory" value="${NFFGClientFactory}" />
-					<sysproperty key="it.polito.dp2.NFFG.NffgVerifierFactory" value="${NFFGInfo.NffgVerifierFactory}" />
-					<sysproperty key="it.polito.dp2.NFFG.Random.seed" value="${seed}"/>
-					<sysproperty key="it.polito.dp2.NFFG.Random.testcase" value="${test.case}"/>
-					<sysproperty key="it.polito.dp2.NFFG.lab3.URL" value="${URL}" />
-					<classpath>
-						<path refid="NFFG.classpath" />
-						<pathelement location="${lib.dir}/NFFGRandom.jar"/>
-						<pathelement path="${build.dir}" />
-						<path refid="test.classpath" />
-					</classpath>
-				</java>
-				<echo>Done Main.</echo>
-		</target>
 	
 </project>

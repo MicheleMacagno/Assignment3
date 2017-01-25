@@ -16,9 +16,6 @@
 	<xsd:element name="nffg" type="tns:XNffg" />
 	<xsd:element name="policy" type="tns:XPolicy" />
 	<xsd:element name="policies" type="tns:XPolicies"/>
-	<!-- 	<xsd:element name="verification" type="XVerificationRequest"/> -->
-	<!--  this can be useful to verify many policies at a time -->
-
 	
 	<xsd:complexType name="XNffgs">
 		<xsd:sequence>
@@ -153,7 +150,7 @@
 				</xsd:sequence>
 	</xsd:complexType>
 
-
+	<!--  All the information relative to the verification of a policy -->
 	<xsd:complexType name="XVerification">
 		<xsd:sequence>
 			<xsd:element name="verificationTime" type="xsd:dateTime" />
@@ -162,18 +159,12 @@
 		</xsd:sequence>
 	</xsd:complexType>
 	
-<!-- 	<xsd:complexType name="XVerificationRequest"> -->
-<!-- 		<xsd:sequence> -->
-<!-- 			<xsd:element name="policyname" type="XNameType" minOccurs="1" maxOccurs="unbounded"/> -->
-<!-- 		</xsd:sequence> -->
-<!-- 	</xsd:complexType> -->
-	
 
-	<!-- name - the name of the NF-FG to get (a string made of alphanumeric 
+	<!-- name - the name of elements (a string made of alphanumeric 
 		characters only, where the first character is alphabetic). -->
 	<xsd:simpleType name="XNameType">
 		<xsd:restriction base="xsd:string">
-			<xsd:pattern value="[a-zA-Z_][a-zA-Z0-9_]*" />
+			<xsd:pattern value="[a-zA-Z][a-zA-Z0-9]*" />
 		</xsd:restriction>
 	</xsd:simpleType>
 

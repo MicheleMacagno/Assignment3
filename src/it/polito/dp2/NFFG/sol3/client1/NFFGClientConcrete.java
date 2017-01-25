@@ -10,33 +10,23 @@ import it.polito.dp2.NFFG.sol3.bindings.XLink;
 import it.polito.dp2.NFFG.sol3.bindings.XNffg;
 import it.polito.dp2.NFFG.sol3.bindings.XNffgs;
 import it.polito.dp2.NFFG.sol3.bindings.XNodes;
-import it.polito.dp2.NFFG.sol3.bindings.XPolicies;
 import it.polito.dp2.NFFG.sol3.bindings.XPolicy;
 import it.polito.dp2.NFFG.sol3.bindings.XTraversal;
 import it.polito.dp2.NFFG.sol3.bindings.XVerification;
 import it.polito.dp2.NFFG.sol3.bindings.XNode;
-import javax.ws.rs.*;
-
-import java.io.File;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Set;
 
-import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
-import javax.xml.validation.SchemaFactory;
 
 
 import it.polito.dp2.NFFG.*;
@@ -49,22 +39,36 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 	Client client=null;
 	ObjectFactory of = new ObjectFactory();
 	
-	public NFFGClientConcrete() throws ServiceException{
+	/*
+	 * The constructor set up the system, preparing the url of the service.
+	 * Throws an exception in order to allow the method NFFGClientFactory.newNFFGClient() 
+	 * of class NFFGClientFactory 
+	 * to throw, eventually,
+	 * the NFFGClientException if some errors occurs
+	 */
+	public NFFGClientConcrete() throws Exception{
 		try {
 			
 			client = ClientBuilder.newClient();
 			factory = it.polito.dp2.NFFG.NffgVerifierFactory.newInstance();
 			monitor = factory.newNffgVerifier();
+		
+		
 		}catch(FactoryConfigurationError e){
 			e.printStackTrace();
-			throw new ServiceException("Error 0 during creation of NffgVerifier");
+			throw new Exception("Error 0 during creation of NffgVerifier");
 		} catch (NffgVerifierException e) {
 			e.printStackTrace();
-			throw new ServiceException("Error 1 during creation of NffgVerifier");
+			throw new Exception("Error 1 during creation of NffgVerifier");
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new Exception("Error 2 during creation of NffgVerifier");
 		}catch(Throwable e){
 			e.printStackTrace();
-			throw new ServiceException("Error 2 during creation of NffgVerifier");
+			throw new Exception("Error 3 during creation of NffgVerifier");
 		}
+		
+		
 		
 		baseServiceUrl = System.getProperty("it.polito.dp2.NFFG.lab3.URL");
 		if(baseServiceUrl==null){
@@ -96,25 +100,24 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 					.accept(MediaType.APPLICATION_XML)
 					.post(Entity.xml(of.createNffg(xnffg)),XNffg.class);
 			
-			//DEBUG
-//			this.printXML(null,of.createNffg(response));
 		}catch(WebApplicationException e){
 			
-//			System.out.println(e.getResponse().getEntity(String.class));
 			System.out.println(e.getMessage());
 			switch(e.getResponse().getStatus()){
 			case ReturnStatus.FORBIDDEN:
-				throw new AlreadyLoadedException(ReturnStatus.FORBIDDEN +" - Error - Nffg already existing! Impossible to create it!");
+				throw new AlreadyLoadedException(ReturnStatus.FORBIDDEN +" - Error - Nffg already existing! Impossible to create it!\n" +e.getMessage());
 			case ReturnStatus.INTERNAL_SERVER_ERROR:
 				throw new  ServiceException(e.getResponse().getStatus()+" - Error " +e.getMessage());
+			case ReturnStatus.BAD_REQUEST:
+				throw new  ServiceException(e.getResponse().getStatus()+" - Error " +e.getMessage());
 			default:
-				throw new ServiceException(e.getResponse().getStatus()+" Error - Unexpected exception, impossble to create the nffg");
+				throw new ServiceException(e.getResponse().getStatus()+" Error - Unexpected exception, impossble to create the nffg\n" + e.getMessage());
 			}
 		
 		}
 		catch(Exception e){
 			e.printStackTrace();
-			throw new ServiceException("Error - Unexpected exception, impossble to create the nffg ");
+			throw new ServiceException("Error - Unexpected exception, impossble to create the nffg \n" + e.getMessage());
 		}
 		
 		
@@ -126,11 +129,9 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 	@Override
 	public void loadAll() throws AlreadyLoadedException, ServiceException {
 	
-//		LinkedHashMap<String,XNffg> mapXNffg = new LinkedHashMap<String,XNffg>();
 		Set<NffgReader> nffgsToAdd = monitor.getNffgs();
 		Set<PolicyReader> policiesToAdd = monitor.getPolicies();
 		XNffgs response=null;
-		//verify there are no duplicated nffgs in the system
 		
 		XNffgs xnffgs = of.createXNffgs();
 		for(NffgReader nr : nffgsToAdd){
@@ -156,6 +157,9 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 			
 			case ReturnStatus.INTERNAL_SERVER_ERROR:
 				throw new  ServiceException(e.getResponse().getStatus()+" - Error " +e.getMessage());
+			
+			case ReturnStatus.BAD_REQUEST:
+				throw new  ServiceException(e.getResponse().getStatus()+" - Error " +e.getMessage());
 				
 			default:
 				throw new ServiceException(e.getResponse().getStatus()+" Error - Nffgs reported an unexpected error while adding them.");
@@ -168,25 +172,9 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 		
 		
 		
-		//eventually overwrite the policies
-//		XPolicies xpolicies = of.createXPolicies();
+		//Create and eventually overwrite the policies
 		for(PolicyReader pr : policiesToAdd){
 				XPolicy xpolicy = this.prepareXPolicy(pr);
-//				xpolicies.getPolicy().add(xpolicy);
-				
-				//send the set of policies all together
-
-//				DEBUG
-//				xpolicies.getPolicy().forEach(p->{
-//					System.out.println(p.getName());
-//					System.out.println(p.getNffg());
-//					System.out.println(p.getSrc());
-//					System.out.println(p.getDst());
-//					System.out.println(p.getTraversal());
-//					System.out.println(p.getVerification());
-//				});
-				
-//				this.printXML("prova.xml", xpolicies);
 				
 				XPolicy responseP;
 				resourceName = baseServiceUrl + "policies/"+xpolicy.getName();
@@ -197,10 +185,8 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 							.accept(MediaType.APPLICATION_XML)
 							.put(Entity.xml(of.createPolicy(xpolicy)),XPolicy.class);
 					
-//					this.printXML(null, of.createPolicies(responseP));
 				
 				}catch(WebApplicationException e){
-//					System.out.println(e.getResponse().getEntity(String.class));
 					System.out.println(e.getMessage());
 
 					switch(e.getResponse().getStatus()){
@@ -210,13 +196,16 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 					case ReturnStatus.INTERNAL_SERVER_ERROR:
 						throw new  ServiceException(e.getResponse().getStatus()+" - Error " +e.getMessage());
 					
+					case ReturnStatus.BAD_REQUEST:
+						throw new  ServiceException(e.getResponse().getStatus()+" - Error " +e.getMessage());
+					
 					default:
-						throw new ServiceException(e.getResponse().getStatus()+" Error - Policy unexpected error during deletion of the policy");
+						throw new ServiceException(e.getResponse().getStatus()+" Error - while creating a new policy");
 					}
 				}catch(Exception e){
 					e.printStackTrace();
 					System.out.println(e.getMessage());
-					throw new ServiceException("-- Error - Policies Unexpected error while creating the set of policies");
+					throw new ServiceException("Error - Unexpected error while creating the set of policies");
 				}
 		}
 		
@@ -254,7 +243,6 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 					.request(MediaType.APPLICATION_XML)
 					.accept(MediaType.APPLICATION_XML)
 					.put(Entity.xml(of.createPolicy(xpolicy)),XPolicy.class);
-//			this.printXML(null, of.createPolicy(response));
 			
 		}catch(WebApplicationException e){
 			System.out.println(e.getMessage());
@@ -267,6 +255,9 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 				throw new UnknownNameException(e.getResponse().getStatus() + " - Error - Nffg or node of the policy refers to is not existing");
 			
 			case ReturnStatus.INTERNAL_SERVER_ERROR:
+				throw new  ServiceException(e.getResponse().getStatus()+" - Error " +e.getMessage());
+			
+			case ReturnStatus.BAD_REQUEST:
 				throw new  ServiceException(e.getResponse().getStatus()+" - Error " +e.getMessage());
 			default:
 				throw new ServiceException("Error - Policy unexpected error during deletion of the policy");
@@ -281,12 +272,6 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 
 
 
-	/*
-	 * This method contains the correct way to check the received exception
-	 * Please extend the usage of UniformInterfaceException to all other methods
-	 * (non-Javadoc)
-	 * @see it.polito.dp2.NFFG.lab3.NFFGClient#unloadReachabilityPolicy(java.lang.String)
-	 */
 	@Override
 	public void unloadReachabilityPolicy(String name) throws UnknownNameException, ServiceException {
 		String resourceName = baseServiceUrl + "policies/"+ name;
@@ -297,7 +282,6 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 					.accept(MediaType.APPLICATION_XML)
 					.delete(XPolicy.class);
 			
-//			this.printXML(null, of.createPolicy(response));
 		}catch(WebApplicationException e){
 			System.out.println(e.getMessage());
 
@@ -333,12 +317,13 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 
 			switch(e.getResponse().getStatus()){
 			case ReturnStatus.NOT_FOUND:
-//				System.out.println(e.getResponse().getEntity(String.class));
 				throw new UnknownNameException(ReturnStatus.NOT_FOUND + " Error - The policy you want to verify is not existing");
+			
 			case ReturnStatus.INTERNAL_SERVER_ERROR:
 				throw new  ServiceException(e.getResponse().getStatus()+" - Error " +e.getMessage());
+			
 			default:			
-			throw new ServiceException(e.getResponse().getStatus()+ "--Error - Policy unexpected error verification of the policy");
+				throw new ServiceException(e.getResponse().getStatus()+ "--Error - Policy unexpected error verification of the policy");
 			}
 		}catch(Exception e){
 			e.printStackTrace();
@@ -366,44 +351,6 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 		return date2;
 	}
 	
-	public <T> void printXML(String filename, JAXBElement<T> je){
-    	File file = null;
-    	
-    	JAXBContext jaxbContext;
-		try {
-		
-			SchemaFactory sf = SchemaFactory.newInstance(javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI);
-			jaxbContext = JAXBContext.newInstance("it.polito.dp2.NFFG.sol3.bindings");
-			Marshaller jaxbMarshaller = null;
-			jaxbMarshaller = jaxbContext.createMarshaller();
-			jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-			//Validation of the schema - from JAXB-unmarshal-validate
-//			jaxbMarshaller.setSchema(sf.newSchema(new File("xsd/nffgVerifier.xsd")));
-			ObjectFactory objectFactory = new ObjectFactory();
-//		    JAXBElement<XPolicies> je = objectFactory.createPolicies(xpolicies);
-		    		   
-//		     AddressType shipping = je.getValue();
-			if(filename!=null){
-				try{
-					file = new File(filename);
-					jaxbMarshaller.marshal(file, System.out);
-					System.out.println("XML file correctly written in " + filename);
-				}
-				catch(Exception e){
-					e.printStackTrace();
-				}
-			}else{
-				jaxbMarshaller.marshal(je, System.out);
-			}
-			
-		
-		} catch (JAXBException e) {
-			e.printStackTrace();
-		} catch (Exception e){
-			e.printStackTrace();
-		}
-		
-    }
 	
 	/*
 	 * Method used to prepare a xNffg to send it to the web service.
@@ -488,35 +435,4 @@ public class NFFGClientConcrete implements it.polito.dp2.NFFG.lab3.NFFGClient {
 		return xpolicy;
 	}
 	
-//TODO: remove it
-	public void generaErrori() throws AlreadyLoadedException, ServiceException{
-		try{
-	
-			String resourceName=baseServiceUrl+"errore";
-			XNffg xnffg = new XNffg();
-			xnffg.setName("nodoerrore");
-			XNffg response=
-					client.target(resourceName)
-					.request(MediaType.APPLICATION_XML)
-					.accept(MediaType.APPLICATION_XML)
-					.post(Entity.xml(of.createNffg(xnffg)),XNffg.class);
-			
-			//DEBUG
-//			this.printXML(null,of.createNffg(response));
-		}catch(WebApplicationException e){
-			
-//			System.out.println(e.getResponse().getEntity(String.class));
-			System.out.println(e.getMessage());
-			System.out.println("Errore" + e.getResponse().getStatus());
-			switch(e.getResponse().getStatus()){
-			case ReturnStatus.FORBIDDEN:
-				throw new AlreadyLoadedException(ReturnStatus.FORBIDDEN +" - Error - Nffg already existing! Impossible to create it!");
-			case ReturnStatus.INTERNAL_SERVER_ERROR:
-				throw new  ServiceException(e.getResponse().getStatus()+" - Error " +e.getMessage());
-			default:
-				throw new ServiceException(e.getResponse().getStatus()+" Error - Unexpected exception, impossble to create the nffg");
-			}
-		
-		}
-	}
 }
